@@ -1,0 +1,2491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ditch Classroom — Developed by Aryan Yadav</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+    <!-- Tone.js for Lobby, Gameplay, Cutscenes, Win & Lose Music -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        :root {
+            --bg-gemini: #0b0f19;
+            --bg-deep: #131314;
+            --card-gemini: rgba(20, 23, 32, 0.88);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-gemini);
+            background-image: 
+                radial-gradient(circle at 12% 18%, rgba(66, 133, 244, 0.16) 0%, transparent 38%),
+                radial-gradient(circle at 88% 22%, rgba(155, 114, 203, 0.16) 0%, transparent 40%),
+                radial-gradient(circle at 50% 88%, rgba(217, 101, 112, 0.14) 0%, transparent 45%);
+            color: #f8fafc;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Floating Orbs */
+        .ambient-orb {
+            position: fixed;
+            border-radius: 9999px;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.35;
+            animation: floatOrb 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(35px, -30px) scale(1.12); }
+        }
+
+        /* Gemini Glowing Animated Text */
+        .gemini-glow-logo {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(90deg, #4285f4, #9b72cb, #d96570, #f49c46, #4285f4);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: geminiFlow 5s ease infinite;
+            filter: drop-shadow(0 0 20px rgba(155, 114, 203, 0.45)) drop-shadow(0 0 38px rgba(66, 133, 244, 0.25));
+        }
+
+        @keyframes geminiFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .gemini-border {
+            background: var(--card-gemini);
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(155, 114, 203, 0.3);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.72), 0 0 30px rgba(66, 133, 244, 0.1);
+        }
+
+        .gemini-pill-active {
+            border-color: #9b72cb !important;
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.25), rgba(217, 101, 112, 0.25)) !important;
+            box-shadow: 0 0 20px rgba(155, 114, 203, 0.42);
+            transform: translateY(-2px);
+        }
+
+        .gemini-btn {
+            background: linear-gradient(90deg, #4285f4, #9b72cb, #d96570);
+            background-size: 200% auto;
+            color: #fff;
+            font-weight: 800;
+            transition: all 0.25s ease;
+            box-shadow: 0 6px 22px rgba(155, 114, 203, 0.45);
+        }
+
+        .gemini-btn:hover {
+            background-position: right center;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(217, 101, 112, 0.6);
+        }
+
+        .gemini-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Shake Animation for Locked Levels */
+        @keyframes shakeLock {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-7px) rotate(-1deg); }
+            40%, 80% { transform: translateX(7px) rotate(1deg); }
+        }
+
+        .shake-card {
+            animation: shakeLock 0.42s ease;
+            border-color: #f43f5e !important;
+        }
+
+        /* Page Transitions */
+        .page-screen {
+            display: none;
+            position: relative;
+            z-index: 10;
+            animation: pageFade 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .page-screen.active {
+            display: flex;
+        }
+
+        @keyframes pageFade {
+            from { opacity: 0; transform: translateY(14px) scale(0.99); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Cross D-Pad Buttons for Mobile & Touch */
+        .dpad-btn {
+            width: 54px;
+            height: 50px;
+            background: rgba(30, 41, 59, 0.95);
+            border: 1.5px solid rgba(148, 163, 184, 0.38);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 0 #090d16;
+            transition: all 0.08s ease;
+            touch-action: manipulation;
+        }
+
+        .dpad-btn:active, .dpad-btn.pressed {
+            background: linear-gradient(135deg, #4285f4, #9b72cb);
+            color: #fff;
+            border-color: #fff;
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #090d16;
+        }
+
+        /* Starburst Result Badge */
+        .starburst-box {
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.22), rgba(217, 101, 112, 0.26));
+            border: 2px dashed #f49c46;
+            position: relative;
+            animation: pulseGlow 2s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 15px rgba(66, 133, 244, 0.3); }
+            100% { box-shadow: 0 0 32px rgba(244, 156, 70, 0.6); }
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 14px;
+            border: 3px solid rgba(148, 163, 184, 0.32);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-2.5 sm:p-5">
+
+    <!-- Ambient Gemini Background Orbs -->
+    <div class="ambient-orb w-72 h-72 bg-blue-600/30 top-6 left-6"></div>
+    <div class="ambient-orb w-80 h-80 bg-purple-600/30 bottom-10 right-8" style="animation-delay: -4s;"></div>
+    <div class="ambient-orb w-64 h-64 bg-rose-500/25 top-1/2 left-1/2" style="animation-delay: -7s;"></div>
+
+    <!-- Floating Top-Right Audio Control -->
+    <div class="fixed top-3 right-3 z-50 flex items-center gap-2">
+        <button id="audio-toggle-btn" class="gemini-border px-3.5 py-2 rounded-full text-xs sm:text-sm font-bold flex items-center gap-2 hover:border-purple-400 transition">
+            <i id="audio-icon" class="fa-solid fa-volume-high text-purple-400"></i>
+            <span id="audio-label">Music: ON</span>
+        </button>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-box" class="fixed bottom-5 right-5 z-50 hidden gemini-border border-purple-400 px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold text-white shadow-2xl flex items-center gap-2.5 max-w-sm">
+        <i class="fa-solid fa-wand-magic-sparkles text-amber-400 text-base"></i>
+        <span id="toast-text">Notification</span>
+    </div>
+
+    <!-- ==========================================================
+         PAGE 1: EXTENDED LOADING SCREEN WITH 5s BREAK AT 98%
+         ========================================================== -->
+    <section id="page-1" class="page-screen active w-full max-w-2xl gemini-border rounded-3xl p-7 sm:p-12 flex-col items-center text-center my-auto">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-purple-500/40 text-xs font-bold tracking-widest uppercase text-purple-300 mb-5">
+            <i class="fa-solid fa-graduation-cap text-blue-400"></i> 4-Stage Campus Stealth Saga
+        </div>
+
+        <h1 class="gemini-glow-logo text-4xl sm:text-6xl font-extrabold tracking-tight leading-none mb-3">
+            DITCH CLASSROOM
+        </h1>
+
+        <p class="text-base sm:text-lg text-slate-300 font-semibold tracking-wide mb-7">
+            Developed by <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 font-extrabold underline decoration-purple-500/60 underline-offset-4">Aryan Yadav</span>
+        </p>
+
+        <!-- Big Glowing Percentage Badge -->
+        <div class="mb-3 flex items-baseline gap-1">
+            <span id="loading-big-percent" class="gemini-glow-logo text-4xl sm:text-5xl font-extrabold font-mono">0%</span>
+        </div>
+
+        <!-- Glowing Loading Bar -->
+        <div class="w-full max-w-md bg-slate-950/90 border border-slate-700/80 rounded-full h-5 p-1 overflow-hidden shadow-inner mb-3">
+            <div id="loading-bar-fill" class="h-full rounded-full transition-all duration-150" style="width: 0%; background: linear-gradient(90deg, #4285f4, #9b72cb, #d96570, #f49c46);"></div>
+        </div>
+
+        <!-- Dynamic Status & 98% 5-Second Suspense Notice -->
+        <div id="loading-step-text" class="text-xs sm:text-sm text-slate-300 font-medium min-h-[42px] max-w-md flex items-center justify-center px-3">
+            Initializing MMMUT lecture hall blueprints...
+        </div>
+
+        <div id="pause-98-badge" class="hidden mt-2 px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-400/50 text-amber-300 text-xs font-bold animate-pulse">
+            ⏳ Hold up! 5-second stealth check at 98% — Waiting for Professor to face the blackboard...
+        </div>
+
+        <button id="enter-campus-btn" class="hidden mt-6 gemini-btn px-8 py-4 rounded-2xl text-base sm:text-lg tracking-wide flex items-center gap-3">
+            <span>Enter Campus & Start Music</span>
+            <i class="fa-solid fa-arrow-right"></i>
+        </button>
+    </section>
+
+    <!-- ==========================================================
+         PAGE 2: STUDENT PROFILE, COURSE, DIFFICULTY & MOBILE LAYOUT
+         ========================================================== -->
+    <section id="page-2" class="page-screen w-full max-w-3xl gemini-border rounded-3xl p-5 sm:p-8 flex-col items-center my-auto">
+        <div class="text-center mb-5">
+            <h2 class="gemini-glow-logo text-2xl sm:text-4xl font-extrabold">STUDENT PROFILE SETUP</h2>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">Customize your avatar, degree course, difficulty, and mobile thumb controls</p>
+        </div>
+
+        <!-- 1. Gender & Outfit Color Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mb-4">
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 text-center">
+                    1. Choose Student Avatar
+                </label>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button data-gender="male" class="opt-gender gemini-pill-active bg-slate-900/90 border border-slate-700 rounded-2xl p-3 flex items-center justify-center gap-2.5 transition">
+                        <span class="text-2xl">👨‍🎓</span>
+                        <div class="text-left">
+                            <div class="font-bold text-xs sm:text-sm text-white">Male</div>
+                            <div class="text-[10px] text-slate-400">Hoodie & Cap</div>
+                        </div>
+                    </button>
+                    <button data-gender="female" class="opt-gender bg-slate-900/90 border border-slate-700 rounded-2xl p-3 flex items-center justify-center gap-2.5 transition">
+                        <span class="text-2xl">👩‍🎓</span>
+                        <div class="text-left">
+                            <div class="font-bold text-xs sm:text-sm text-white">Female</div>
+                            <div class="text-[10px] text-slate-400">Jacket & Ponytail</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 text-center">
+                    2. Backpack & Gear Color
+                </label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button data-color="#3b82f6" class="opt-color gemini-pill-active bg-slate-900/90 border border-slate-700 rounded-2xl p-3 text-center font-bold text-xs text-blue-400 transition">
+                        🔵 Electric
+                    </button>
+                    <button data-color="#a855f7" class="opt-color bg-slate-900/90 border border-slate-700 rounded-2xl p-3 text-center font-bold text-xs text-purple-400 transition">
+                        🟣 Neon
+                    </button>
+                    <button data-color="#f97316" class="opt-color bg-slate-900/90 border border-slate-700 rounded-2xl p-3 text-center font-bold text-xs text-orange-400 transition">
+                        🟠 Sunset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Course Selection -->
+        <div class="w-full mb-4">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 text-center">
+                3. Select Your Degree / Stream
+            </label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <button data-course="B.Tech" class="opt-course gemini-pill-active bg-slate-900/90 border border-slate-700 rounded-xl py-2.5 px-3 font-bold text-xs sm:text-sm text-white transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-laptop-code text-blue-400"></i> B.Tech
+                </button>
+                <button data-course="MBBS" class="opt-course bg-slate-900/90 border border-slate-700 rounded-xl py-2.5 px-3 font-bold text-xs sm:text-sm text-white transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-user-doctor text-emerald-400"></i> MBBS
+                </button>
+                <button data-course="BA" class="opt-course bg-slate-900/90 border border-slate-700 rounded-xl py-2.5 px-3 font-bold text-xs sm:text-sm text-white transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-landmark text-amber-400"></i> BA
+                </button>
+                <button data-course="BBA" class="opt-course bg-slate-900/90 border border-slate-700 rounded-xl py-2.5 px-3 font-bold text-xs sm:text-sm text-white transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-chart-line text-purple-400"></i> BBA
+                </button>
+                <button data-course="B.Pharma" class="opt-course bg-slate-900/90 border border-slate-700 rounded-xl py-2.5 px-3 font-bold text-xs sm:text-sm text-white transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-capsules text-pink-400"></i> B.Pharma
+                </button>
+                <button data-course="School Student" class="opt-course bg-slate-900/90 border border-slate-700 rounded-xl py-2.5 px-3 font-bold text-xs sm:text-sm text-white transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-school text-cyan-400"></i> School Student
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. Dynamic Subject Selection -->
+        <div class="w-full mb-4">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 text-center">
+                4. Select Lecture to Bunk (<span id="selected-course-label" class="text-purple-400">B.Tech</span>)
+            </label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="subject-group"></div>
+        </div>
+
+        <!-- 5. Difficulty & Mobile Control Dock Position -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mb-6">
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 text-center">
+                    5. Difficulty Mode (5.0 Hearts ❤️)
+                </label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button data-diff="easy" class="opt-diff gemini-pill-active bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-center transition">
+                        <div class="font-bold text-xs sm:text-sm text-emerald-400">Easy Mode</div>
+                        <div class="text-[10px] text-slate-400">Chill Chasers • Less Crowd</div>
+                    </button>
+                    <button data-diff="hard" class="opt-diff bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-center transition">
+                        <div class="font-bold text-xs sm:text-sm text-rose-400">Hard Mode</div>
+                        <div class="text-[10px] text-slate-400">Nerds + Extra Asst + 3 Friends</div>
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 text-center">
+                    6. Mobile Playing Dashboard Side
+                </label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button data-dock="left" class="opt-dock bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-center font-bold text-xs text-slate-200 transition">
+                        ⬅️ Left Side
+                    </button>
+                    <button data-dock="bottom" class="opt-dock bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-center font-bold text-xs text-slate-200 transition">
+                        ⬇️ Bottom
+                    </button>
+                    <button data-dock="right" class="opt-dock gemini-pill-active bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-center font-bold text-xs text-slate-200 transition">
+                        ➡️ Right Side
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button id="save-profile-btn" class="gemini-btn w-full sm:w-auto px-10 py-3.5 rounded-2xl text-base flex items-center justify-center gap-2">
+            <span>Enter Campus Escape Map</span>
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+    </section>
+
+    <!-- ==========================================================
+         PAGE 3: 4-LEVEL DASHBOARD & DEVELOPER PORTFOLIO
+         ========================================================== -->
+    <section id="page-3" class="page-screen w-full max-w-5xl gemini-border rounded-3xl p-5 sm:p-7 flex-col my-auto">
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 mb-5 border-b border-slate-800">
+            <div>
+                <h2 class="gemini-glow-logo text-2xl sm:text-4xl font-extrabold">WELCOME TO DITCH CLASSROOM</h2>
+                <p id="dashboard-student-summary" class="text-xs sm:text-sm text-slate-400 mt-0.5">
+                    B.Tech • Bunking Data Structures • Easy Mode
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="watch-intro-again-btn" class="bg-purple-950/70 hover:bg-purple-900/80 border border-purple-500/40 px-3.5 py-2 rounded-xl text-xs font-bold text-purple-200 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-film"></i>
+                    <span>Intro Promo</span>
+                </button>
+                <button id="open-settings-btn" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-600 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-sliders text-purple-400"></i>
+                    <span>Profile & Mode</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 4-Stage Campus Progression Board -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                <span><i class="fa-solid fa-route text-blue-400 mr-1"></i> Complete Each Stage to Unlock the Next</span>
+                <span id="progress-counter-badge" class="text-emerald-400">Stage 1 / 4 Unlocked</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5" id="levels-grid">
+                <!-- Populated dynamically by renderLevelCards() -->
+            </div>
+        </div>
+
+        <!-- Embedded Developer Portfolio Section for Aryan Yadav -->
+        <div class="bg-slate-950/90 border border-purple-500/35 rounded-2xl p-5 sm:p-6">
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+                <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-purple-400">
+                    <i class="fa-solid fa-terminal"></i> Developer Spotlight & Creator Portfolio
+                </div>
+                <span class="text-[11px] font-mono text-slate-400">MMMUT Gorakhpur • CSE '26–'27</span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <!-- Left Column: Aryan Yadav Bio -->
+                <div class="lg:col-span-8 space-y-2.5 text-left">
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <h3 class="text-xl sm:text-2xl font-extrabold text-white">Hey, I'm Aryan 👋</h3>
+                        <span class="px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 border border-purple-400/40 text-xs font-bold text-purple-200">
+                            Student | Developer | Building Ideas into Reality
+                        </span>
+                    </div>
+
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        I'm <b class="text-white">Aryan Yadav</b>, a first-year <b class="text-blue-300">Computer Science Engineering student at MMMUT Gorakhpur</b>, passionate about technology, problem-solving, and building things that make a difference.
+                    </p>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        My journey in development started with curiosity — wanting to understand how websites work and eventually learning to build my own. I enjoy working with <b class="text-purple-300">Python</b>, exploring backend development, and turning everyday problems into meaningful digital projects.
+                    </p>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        For me, development isn't just about writing code. It's about learning, experimenting, failing, improving, and creating something useful. I'm currently exploring <b class="text-pink-300">FastAPI, data science, and full-stack development</b> while continuously challenging myself with new projects.
+                    </p>
+                    <div class="pt-1 flex flex-wrap items-center gap-3 text-xs sm:text-sm">
+                        <span class="px-3 py-1 rounded-lg bg-slate-900 border border-slate-700 font-bold text-amber-300">
+                            💡 My philosophy: Learn. Build. Improve. Repeat.
+                        </span>
+                        <span class="text-slate-400 italic text-xs">
+                            "I'm still at the beginning of my journey, and that's what makes it exciting."
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Right Column: Social Links & Idea Collaboration Box -->
+                <div class="lg:col-span-4 flex flex-col gap-3 w-full">
+                    <div class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Let's Connect 🚀
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <a href="https://youtube.com/@aryanyadav-i2g9y?si=8agZzI-43ACwHJSA" target="_blank" rel="noopener noreferrer"
+                           class="bg-slate-900 hover:bg-red-950/60 border border-slate-700 hover:border-red-500/60 rounded-xl p-2.5 flex items-center gap-2.5 transition group">
+                            <i class="fa-brands fa-youtube text-xl text-red-500 group-hover:scale-110 transition"></i>
+                            <div class="text-left">
+                                <div class="text-xs font-bold text-white">YouTube</div>
+                                <div class="text-[10px] text-slate-400">@aryanyadav</div>
+                            </div>
+                        </a>
+
+                        <a href="https://github.com/arynyadav187-ux" target="_blank" rel="noopener noreferrer"
+                           class="bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-400 rounded-xl p-2.5 flex items-center gap-2.5 transition group">
+                            <i class="fa-brands fa-github text-xl text-white group-hover:scale-110 transition"></i>
+                            <div class="text-left">
+                                <div class="text-xs font-bold text-white">GitHub</div>
+                                <div class="text-[10px] text-slate-400">arynyadav187-ux</div>
+                            </div>
+                        </a>
+
+                        <a href="https://www.linkedin.com/in/aryan-yadav-71a684420?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" rel="noopener noreferrer"
+                           class="bg-slate-900 hover:bg-blue-950/60 border border-slate-700 hover:border-blue-500/60 rounded-xl p-2.5 flex items-center gap-2.5 transition group">
+                            <i class="fa-brands fa-linkedin text-xl text-blue-400 group-hover:scale-110 transition"></i>
+                            <div class="text-left">
+                                <div class="text-xs font-bold text-white">LinkedIn</div>
+                                <div class="text-[10px] text-slate-400">Aryan Yadav</div>
+                            </div>
+                        </a>
+
+                        <a href="https://www.instagram.com/_aryan_1729?xtok=MXNhaGxnamszcWFnZQ==" target="_blank" rel="noopener noreferrer"
+                           class="bg-slate-900 hover:bg-pink-950/60 border border-slate-700 hover:border-pink-500/60 rounded-xl p-2.5 flex items-center gap-2.5 transition group">
+                            <i class="fa-brands fa-instagram text-xl text-pink-400 group-hover:scale-110 transition"></i>
+                            <div class="text-left">
+                                <div class="text-xs font-bold text-white">Instagram</div>
+                                <div class="text-[10px] text-slate-400">@_aryan_1729</div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Share Idea Box -->
+                    <div class="bg-slate-900/90 border border-purple-500/40 rounded-xl p-3">
+                        <div class="text-xs font-bold text-purple-200 mb-1.5">
+                            💬 Share me any of your idea — we can build together!
+                        </div>
+                        <div class="flex gap-2">
+                            <input id="idea-input" type="text" placeholder="Your app or game idea..." 
+                                   class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-purple-400">
+                            <button id="send-idea-btn" class="gemini-btn px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">
+                                Send 🚀
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between mt-2 text-[11px] text-slate-400">
+                            <a href="mailto:arynyadav187@gmail.com" class="hover:text-white">📧 arynyadav187@gmail.com</a>
+                            <button id="copy-email-btn" class="text-blue-400 hover:underline font-semibold">Copy Email</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================================
+         LEVEL 2 LAB SELECTION MODAL ("Which Lab to Escape?")
+         ========================================================== -->
+    <div id="lab-select-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="gemini-border rounded-3xl max-w-lg w-full p-6 sm:p-8 text-center">
+            <div class="text-4xl mb-2">🧪🔬</div>
+            <h3 class="gemini-glow-logo text-2xl sm:text-3xl font-extrabold mb-1">WHICH LAB ARE YOU ESCAPING?</h3>
+            <p class="text-xs sm:text-sm text-slate-400 mb-5">
+                Choose the practical lab you want to ditch for Level 2. Watch out for green chemical spills, lab workbenches, and the Lab Assistants!
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-6" id="lab-choices-box">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="flex justify-center gap-3">
+                <button id="cancel-lab-modal-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold">
+                    Cancel
+                </button>
+                <button id="confirm-lab-start-btn" class="gemini-btn px-7 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2">
+                    <span>Enter Lab Maze</span>
+                    <i class="fa-solid fa-flask"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         PAGE 4: CINEMATIC ANIMATED PROMO TRAILER & FINALE MOVIE
+         ========================================================== -->
+    <section id="page-4" class="page-screen w-full max-w-4xl gemini-border rounded-3xl p-4 sm:p-6 flex-col items-center my-auto">
+        <div class="w-full flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1 rounded-full bg-pink-500/20 border border-pink-400/40 text-pink-300 text-xs font-extrabold uppercase tracking-wider">
+                    <i class="fa-solid fa-clapperboard mr-1"></i> <span id="cutscene-badge-text">Animated Promo Trailer</span>
+                </span>
+                <span id="cutscene-timer-label" class="text-xs font-mono text-slate-400">7.5s</span>
+            </div>
+            <button id="skip-cutscene-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-4 py-1.5 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 transition">
+                <span>Skip Promo</span>
+                <i class="fa-solid fa-forward-step"></i>
+            </button>
+        </div>
+
+        <div class="w-full flex justify-center">
+            <canvas id="cutsceneCanvas" width="800" height="460"></canvas>
+        </div>
+
+        <p id="cutscene-caption" class="text-xs sm:text-sm text-slate-300 font-semibold mt-3 text-center">
+            "Realizing the lecture is way too boring... Time to BUNK!"
+        </p>
+    </section>
+
+    <!-- ==========================================================
+         PAGE 5: ACTIVE MAZE GAMEPLAY + LEFT / RIGHT / BOTTOM DOCK
+         ========================================================== -->
+    <section id="page-5" class="page-screen w-full max-w-6xl gemini-border rounded-3xl p-3 sm:p-5 flex-col items-center my-auto">
+        <!-- Top Status Bar -->
+        <div class="w-full bg-slate-950/90 border border-slate-800 rounded-2xl px-3.5 py-2 mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+                <span id="hud-level-pill" class="px-2.5 py-1 rounded-lg bg-purple-500/20 border border-purple-400/40 text-purple-300 text-xs font-extrabold">
+                    LVL 1 • CLASSROOM
+                </span>
+                <span id="hud-hearts" class="text-base sm:text-xl tracking-widest">❤️❤️❤️❤️❤️</span>
+                <span id="hud-status-badge" class="hidden md:inline-block px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/40 text-blue-300 text-[11px] font-bold">
+                    Sneaking
+                </span>
+            </div>
+
+            <!-- Live Switcher for Mobile Control Dock Side (Left / Bottom / Right) -->
+            <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-700 rounded-xl p-1 text-[11px]">
+                <span class="text-slate-400 px-1.5 hidden sm:inline">Controls:</span>
+                <button data-live-dock="left" class="live-dock-btn px-2 py-1 rounded-lg font-bold text-slate-300 hover:text-white transition">⬅️ Left</button>
+                <button data-live-dock="bottom" class="live-dock-btn px-2 py-1 rounded-lg font-bold text-slate-300 hover:text-white transition">⬇️ Bottom</button>
+                <button data-live-dock="right" class="live-dock-btn px-2 py-1 rounded-lg font-bold text-slate-300 hover:text-white transition">➡️ Right</button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <div class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1 text-xs">
+                    <span class="text-slate-400">Time:</span>
+                    <b id="hud-timer" class="text-white font-mono ml-1">0.0s</b>
+                </div>
+                <div class="bg-slate-900 border border-amber-500/40 rounded-xl px-2.5 py-1 text-xs">
+                    <span class="text-slate-400">Best:</span>
+                    <b id="hud-best-time" class="text-amber-400 font-mono ml-1">--</b>
+                </div>
+                <button id="game-quit-btn" class="bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 px-3 py-1 rounded-lg text-xs font-bold text-rose-200 transition">
+                    Quit
+                </button>
+            </div>
+        </div>
+
+        <!-- Adaptive Flex Layout for Canvas + Mobile Playing Dashboard (Left, Right, or Bottom) -->
+        <div id="gameplay-flex-wrapper" class="w-full flex flex-col lg:flex-row items-center justify-center gap-4">
+            <!-- Maze Canvas Container -->
+            <div id="canvas-holder" class="flex-1 flex justify-center w-full order-1">
+                <canvas id="mazeCanvas" width="840" height="520"></canvas>
+            </div>
+
+            <!-- Mobile Playing Dashboard & D-Pad Dock -->
+            <div id="mobile-dashboard-dock" class="order-2 bg-slate-950/90 border border-purple-500/35 rounded-2xl p-3.5 flex flex-col items-center justify-between gap-3 min-w-[210px]">
+                <div class="text-center w-full border-b border-slate-800 pb-2">
+                    <div class="text-[10px] uppercase tracking-widest text-purple-400 font-extrabold">Playing Dashboard</div>
+                    <div id="dock-mission-text" class="text-xs font-bold text-slate-200 mt-0.5">Reach the Green EXIT!</div>
+                </div>
+
+                <!-- Cross D-Pad -->
+                <div class="grid grid-cols-3 gap-2 items-center justify-items-center">
+                    <div></div>
+                    <button class="dpad-btn" data-dir="up" aria-label="Up"><i class="fa-solid fa-arrow-up"></i></button>
+                    <div></div>
+                    <button class="dpad-btn" data-dir="left" aria-label="Left"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div class="w-11 h-11 rounded-xl bg-slate-900 border border-purple-500/40 flex items-center justify-center text-purple-400 text-xs font-bold">
+                        RUN
+                    </div>
+                    <button class="dpad-btn" data-dir="right" aria-label="Right"><i class="fa-solid fa-arrow-right"></i></button>
+                    <div></div>
+                    <button class="dpad-btn" data-dir="down" aria-label="Down"><i class="fa-solid fa-arrow-down"></i></button>
+                    <div></div>
+                </div>
+
+                <!-- Turbo Dash Button -->
+                <button id="mobile-dash-btn" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 font-extrabold text-xs text-white shadow-lg flex items-center justify-center gap-2 active:scale-95 transition">
+                    <i class="fa-solid fa-bolt text-amber-300"></i>
+                    <span id="dash-btn-label">SPRINT DASH (SPACE)</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================================
+         PAGE 6: STAGE RESULT & FINALE CELEBRATION SCREEN
+         ========================================================== -->
+    <section id="page-6" class="page-screen w-full max-w-xl gemini-border rounded-3xl p-6 sm:p-9 flex-col items-center text-center my-auto">
+        <div class="starburst-box rounded-3xl p-6 sm:p-8 w-full mb-6">
+            <div id="result-emoji" class="text-5xl mb-2">🎉</div>
+            <div id="result-stage-tag" class="text-xs font-bold uppercase tracking-widest text-amber-300 mb-1">STAGE CLEARED</div>
+            <h2 id="result-heading" class="gemini-glow-logo text-3xl sm:text-5xl font-extrabold">
+                YOU ESCAPED!
+            </h2>
+            <p id="result-subtitle" class="text-xs sm:text-sm text-slate-200 mt-3 leading-relaxed">
+                Next stage is now unlocked!
+            </p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 w-full mb-6">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+                <div class="text-[11px] text-slate-400">Escape Time</div>
+                <div id="res-stat-time" class="text-lg font-extrabold text-white font-mono">14.2s</div>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+                <div class="text-[11px] text-slate-400">Stage Best</div>
+                <div id="res-stat-best" class="text-lg font-extrabold text-amber-400 font-mono">14.2s</div>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+                <div class="text-[11px] text-slate-400">Hearts Left</div>
+                <div id="res-stat-hearts" class="text-lg font-extrabold text-rose-400">5.0 ❤️</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+            <button id="res-next-btn" class="gemini-btn py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                <span id="res-next-label">Next Level</span>
+                <i class="fa-solid fa-forward"></i>
+            </button>
+            <button id="res-replay-btn" class="bg-slate-900 hover:bg-slate-800 border border-purple-500/50 py-3.5 px-4 rounded-xl font-bold text-sm text-purple-200 flex items-center justify-center gap-2 transition">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>Play Again</span>
+            </button>
+            <button id="res-quit-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 py-3.5 px-4 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition">
+                <i class="fa-solid fa-map"></i>
+                <span>Dashboard</span>
+            </button>
+        </div>
+    </section>
+
+<script>
+/* ============================================================================
+   1. COURSE, LAB & LEVEL DEFINITIONS
+   ============================================================================ */
+const COURSE_SUBJECTS = {
+    "B.Tech": ["Data Structures", "Python & FastAPI", "Operating Systems", "Engineering Maths"],
+    "MBBS": ["Human Anatomy", "Physiology", "Biochemistry", "Pathology"],
+    "BA": ["Political Science", "Modern History", "Sociology", "English Lit"],
+    "BBA": ["Business Mgmt", "Marketing 101", "Corporate Finance", "Microeconomics"],
+    "B.Pharma": ["Pharmaceutics", "Medicinal Chem", "Pharmacology", "Pharmacognosy"],
+    "School Student": ["Mathematics", "Physics", "Chemistry", "Computer Sci"]
+};
+
+const COURSE_LABS = {
+    "B.Tech": ["Python & FastAPI Lab", "DSA Programming Lab", "Digital Electronics Lab", "DBMS Server Lab"],
+    "MBBS": ["Human Anatomy Lab", "Biochemistry Titration Lab", "Pathology Microscope Lab", "Physiology Lab"],
+    "BA": ["Language & Media Lab", "Geography GIS Lab", "Psychology Testing Lab", "Archive Research Lab"],
+    "BBA": ["Financial Markets Lab", "Business Analytics Lab", "ERP Simulation Lab", "Consumer Research Lab"],
+    "B.Pharma": ["Pharmaceutics Formulation Lab", "Organic Synthesis Lab", "Pharmacology Lab", "Quality Testing Lab"],
+    "School Student": ["Chemistry Acid-Base Lab", "Physics Optics Lab", "Biology Specimen Lab", "Computer Lab"]
+};
+
+const LEVEL_META = [
+    {
+        id: 1,
+        name: "Ditch Classroom",
+        badge: "LEVEL 1 • LECTURE HALL",
+        desc: "Sneak around wooden benches, dodge the Professor's flying chalk, and slip out the back door!",
+        enemySummaryEasy: "1 Professor (Chalk Thrower)",
+        enemySummaryHard: "1 Fast Professor + 2 Pacing Nerds"
+    },
+    {
+        id: 2,
+        name: "Ditch Lab",
+        badge: "LEVEL 2 • PRACTICAL LAB",
+        desc: "Weave around microscope tables, fume hoods & green chemical spills while dodging Lab Assistants!",
+        enemySummaryEasy: "1 Lab Instructor + 1 Lab Assistant",
+        enemySummaryHard: "1 Lab Instructor + 2 Lab Assistants"
+    },
+    {
+        id: 3,
+        name: "Ditch Corridor",
+        badge: "LEVEL 3 • ACADEMIC CORRIDOR",
+        desc: "Navigate steel lockers & water coolers while escaping friends trying to drag you back to class!",
+        enemySummaryEasy: "2 Clingy Friends Chasing You",
+        enemySummaryHard: "3 Clingy Friends Hunting You Down"
+    },
+    {
+        id: 4,
+        name: "Ditch The Campus",
+        badge: "LEVEL 4 • CAMPUS GROUND",
+        desc: "Cross the campus garden, fountain & barricades while 2 Security Guards patrol the Main Gate!",
+        enemySummaryEasy: "2 Campus Security Guards",
+        enemySummaryHard: "2 Fast Guards + Whistle Alert"
+    }
+];
+
+const playerState = {
+    gender: "male",
+    course: "B.Tech",
+    subject: "Data Structures",
+    selectedLab: "Python & FastAPI Lab",
+    difficulty: "easy",
+    outfitColor: "#3b82f6",
+    dockSide: "right", // 'left' | 'bottom' | 'right'
+    unlockedLevel: parseInt(localStorage.getItem("aryan_ditch_unlocked") || "1", 10),
+    activeLevel: 1
+};
+
+/* ============================================================================
+   2. TONE.JS SYNTHESIZER SOUNDTRACKS (Lobby, Cutscene, Chase, Finale Victory)
+   ============================================================================ */
+let audioInitialized = false;
+let isMuted = false;
+let currentMusicMode = "none";
+let polySynth, bassSynth, sfxSynth, bgmLoop;
+
+async function initAudioEngine() {
+    if (audioInitialized) return;
+    try {
+        await Tone.start();
+        polySynth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: "triangle" },
+            envelope: { attack: 0.02, decay: 0.2, sustain: 0.25, release: 0.5 }
+        }).toDestination();
+        polySynth.volume.value = -10;
+
+        bassSynth = new Tone.MonoSynth({
+            oscillator: { type: "sawtooth" },
+            filter: { Q: 2, type: "lowpass", rolloff: -12 },
+            envelope: { attack: 0.01, decay: 0.15, sustain: 0.1, release: 0.2 }
+        }).toDestination();
+        bassSynth.volume.value = -13;
+
+        sfxSynth = new Tone.Synth({
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.01, decay: 0.1, sustain: 0.05, release: 0.1 }
+        }).toDestination();
+        sfxSynth.volume.value = -5;
+
+        audioInitialized = true;
+    } catch (e) {
+        console.warn("Audio init skipped:", e);
+    }
+}
+
+function playSoundMusic(mode) {
+    if (!audioInitialized || isMuted) return;
+    if (currentMusicMode === mode) return;
+    currentMusicMode = mode;
+
+    if (bgmLoop) {
+        bgmLoop.stop();
+        bgmLoop.dispose();
+        bgmLoop = null;
+    }
+    Tone.Transport.stop();
+    Tone.Transport.cancel();
+
+    if (mode === "lobby") {
+        const chords = [
+            ["C4", "E4", "G4", "B4"],
+            ["A3", "C4", "E4", "G4"],
+            ["F3", "A3", "C4", "E4"],
+            ["G3", "B3", "D4", "F4"]
+        ];
+        let step = 0;
+        bgmLoop = new Tone.Loop(time => {
+            polySynth.triggerAttackRelease(chords[step % chords.length], "2n", time);
+            step++;
+        }, "1m").start(0);
+        Tone.Transport.bpm.value = 94;
+        Tone.Transport.start();
+    } 
+    else if (mode === "cutscene") {
+        const notes = ["C4", "Eb4", "G4", "C5", "Ab3", "C4", "Eb4", "Ab4"];
+        let step = 0;
+        bgmLoop = new Tone.Loop(time => {
+            polySynth.triggerAttackRelease([notes[step % notes.length]], "8n", time);
+            step++;
+        }, "8n").start(0);
+        Tone.Transport.bpm.value = 116;
+        Tone.Transport.start();
+    }
+    else if (mode === "game") {
+        const bassNotes = ["C2", "G2", "A2", "E2", "F2", "C3", "G2", "B2"];
+        const leadNotes = ["E4", null, "G4", "A4", "C5", null, "B4", "G4"];
+        let step = 0;
+        bgmLoop = new Tone.Loop(time => {
+            const b = bassNotes[step % bassNotes.length];
+            const l = leadNotes[step % leadNotes.length];
+            if (b) bassSynth.triggerAttackRelease(b, "8n", time);
+            if (l) polySynth.triggerAttackRelease([l], "16n", time);
+            step++;
+        }, "8n").start(0);
+        Tone.Transport.bpm.value = 132;
+        Tone.Transport.start();
+    }
+    else if (mode === "finale") {
+        // Joyful Homebound Victory Song
+        const fanfare = [
+            ["C4", "E4", "G4", "C5"],
+            ["F4", "A4", "C5", "F5"],
+            ["G4", "B4", "D5", "G5"],
+            ["C4", "E4", "G4", "C5"]
+        ];
+        const melody = ["C5", "E5", "G5", "A5", "G5", "E5", "D5", "C5"];
+        let step = 0;
+        bgmLoop = new Tone.Loop(time => {
+            if (step % 2 === 0) {
+                polySynth.triggerAttackRelease(fanfare[(step / 2) % fanfare.length], "4n", time);
+            }
+            sfxSynth.triggerAttackRelease(melody[step % melody.length], "8n", time);
+            step++;
+        }, "8n").start(0);
+        Tone.Transport.bpm.value = 126;
+        Tone.Transport.start();
+    }
+}
+
+function playSfx(type) {
+    if (!audioInitialized || isMuted) return;
+    const now = Tone.now();
+    try {
+        if (type === "click") sfxSynth.triggerAttackRelease("C5", "32n", now);
+        else if (type === "locked") bassSynth.triggerAttackRelease("Eb2", "16n", now);
+        else if (type === "idea") polySynth.triggerAttackRelease(["E5", "B5"], "8n", now);
+        else if (type === "chalk") sfxSynth.triggerAttackRelease("G5", "16n", now);
+        else if (type === "hit") bassSynth.triggerAttackRelease("D2", "8n", now);
+        else if (type === "boost") polySynth.triggerAttackRelease(["C5", "E5", "G5"], "8n", now);
+        else if (type === "win") {
+            playSoundMusic("none");
+            polySynth.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
+            polySynth.triggerAttackRelease(["E4", "G4", "C5"], "8n", now + 0.16);
+            polySynth.triggerAttackRelease(["G4", "C5", "E5"], "2n", now + 0.32);
+        } else if (type === "caught") {
+            playSoundMusic("none");
+            bassSynth.triggerAttackRelease("G2", "8n", now);
+            bassSynth.triggerAttackRelease("F#2", "8n", now + 0.18);
+            bassSynth.triggerAttackRelease("F2", "8n", now + 0.36);
+            bassSynth.triggerAttackRelease("E2", "2n", now + 0.54);
+        }
+    } catch (e) {}
+}
+
+document.getElementById("audio-toggle-btn").addEventListener("click", async () => {
+    await initAudioEngine();
+    isMuted = !isMuted;
+    const icon = document.getElementById("audio-icon");
+    const label = document.getElementById("audio-label");
+    if (isMuted) {
+        Tone.Destination.mute = true;
+        icon.className = "fa-solid fa-volume-xmark text-slate-400";
+        label.textContent = "Music: OFF";
+    } else {
+        Tone.Destination.mute = false;
+        icon.className = "fa-solid fa-volume-high text-purple-400";
+        label.textContent = "Music: ON";
+        const prev = currentMusicMode;
+        currentMusicMode = "none";
+        playSoundMusic(prev === "none" ? "lobby" : prev);
+    }
+});
+
+/* ============================================================================
+   3. PAGE 1: EXTENDED LOADING WITH 5-SECOND PAUSE AT 98%
+   ============================================================================ */
+function showToast(msg) {
+    const box = document.getElementById("toast-box");
+    document.getElementById("toast-text").textContent = msg;
+    box.classList.remove("hidden");
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => box.classList.add("hidden"), 3400);
+}
+
+function navigateToPage(pageNumber) {
+    document.querySelectorAll(".page-screen").forEach(el => el.classList.remove("active"));
+    document.getElementById(`page-${pageNumber}`).classList.add("active");
+    playSfx("click");
+
+    if (pageNumber === 3) {
+        refreshDashboardUI();
+        playSoundMusic("lobby");
+    } else if (pageNumber === 2) {
+        playSoundMusic("lobby");
+    }
+}
+
+(function runExtendedLoader() {
+    let pct = 0;
+    let pausedAt98 = false;
+    const fillEl = document.getElementById("loading-bar-fill");
+    const bigPctEl = document.getElementById("loading-big-percent");
+    const stepTextEl = document.getElementById("loading-step-text");
+    const badge98 = document.getElementById("pause-98-badge");
+    const enterBtn = document.getElementById("enter-campus-btn");
+
+    const interval = setInterval(() => {
+        if (pausedAt98) return;
+
+        pct += 1;
+        fillEl.style.width = `${pct}%`;
+        bigPctEl.textContent = `${pct}%`;
+
+        if (pct === 12) stepTextEl.textContent = "Loading B.Tech, MBBS, BA, BBA & B.Pharma lecture halls...";
+        if (pct === 32) stepTextEl.textContent = "Building Level 2 Lab Workbenches & Chemical Spills...";
+        if (pct === 54) stepTextEl.textContent = "Spawning Corridor Friends & Campus Security Guards...";
+        if (pct === 76) stepTextEl.textContent = "Rendering Animated Promo Trailers & Aryan Yadav Portfolio...";
+
+        // 5-SECOND DRAMATIC BREAK RIGHT AT 98%!
+        if (pct === 98) {
+            pausedAt98 = true;
+            badge98.classList.remove("hidden");
+            let remainingSec = 5;
+            stepTextEl.textContent = `98% — Checking if Professor is looking at the blackboard (${remainingSec}s)...`;
+
+            const countdown98 = setInterval(() => {
+                remainingSec--;
+                if (remainingSec > 0) {
+                    stepTextEl.textContent = `98% — Checking if Professor is looking at the blackboard (${remainingSec}s)...`;
+                } else {
+                    clearInterval(countdown98);
+                    badge98.classList.add("hidden");
+                    pausedAt98 = false;
+                }
+            }, 1000);
+        }
+
+        if (pct >= 100) {
+            clearInterval(interval);
+            stepTextEl.textContent = "100% — Coast is clear! Ready to Ditch Classroom!";
+            enterBtn.classList.remove("hidden");
+        }
+    }, 65);
+})();
+
+document.getElementById("enter-campus-btn").addEventListener("click", async () => {
+    await initAudioEngine();
+    playSoundMusic("lobby");
+    navigateToPage(2);
+});
+
+/* ============================================================================
+   4. PAGE 2 & PAGE 3: SETUP, MOBILE DOCK POSITION & 4-LEVEL PROGRESSION
+   ============================================================================ */
+function renderSubjectsForCourse(courseName) {
+    document.getElementById("selected-course-label").textContent = courseName;
+    const container = document.getElementById("subject-group");
+    container.innerHTML = "";
+    const list = COURSE_SUBJECTS[courseName] || COURSE_SUBJECTS["B.Tech"];
+    playerState.subject = list[0];
+    playerState.selectedLab = (COURSE_LABS[courseName] || COURSE_LABS["B.Tech"])[0];
+
+    list.forEach((subj, idx) => {
+        const btn = document.createElement("button");
+        btn.className = `opt-subject bg-slate-900/90 border border-slate-700 rounded-xl py-2 px-2.5 text-xs font-bold text-white transition ${idx === 0 ? "gemini-pill-active" : ""}`;
+        btn.textContent = subj;
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".opt-subject").forEach(b => b.classList.remove("gemini-pill-active"));
+            btn.classList.add("gemini-pill-active");
+            playerState.subject = subj;
+            playSfx("click");
+        });
+        container.appendChild(btn);
+    });
+}
+renderSubjectsForCourse("B.Tech");
+
+function bindPillGroup(selector, stateKey, dataKey, callback) {
+    document.querySelectorAll(selector).forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(selector).forEach(b => b.classList.remove("gemini-pill-active"));
+            btn.classList.add("gemini-pill-active");
+            playerState[stateKey] = btn.dataset[dataKey];
+            playSfx("click");
+            if (callback) callback(playerState[stateKey]);
+        });
+    });
+}
+
+bindPillGroup(".opt-gender", "gender", "gender");
+bindPillGroup(".opt-color", "outfitColor", "color");
+bindPillGroup(".opt-course", "course", "course", renderSubjectsForCourse);
+bindPillGroup(".opt-diff", "difficulty", "diff");
+bindPillGroup(".opt-dock", "dockSide", "dock", applyMobileDockPosition);
+
+// Live Dock Switcher inside Gameplay HUD
+function applyMobileDockPosition(side) {
+    playerState.dockSide = side;
+    const wrapper = document.getElementById("gameplay-flex-wrapper");
+    const canvasHolder = document.getElementById("canvas-holder");
+    const dock = document.getElementById("mobile-dashboard-dock");
+
+    document.querySelectorAll(".live-dock-btn").forEach(b => {
+        if (b.dataset.liveDock === side) {
+            b.className = "live-dock-btn px-2.5 py-1 rounded-lg font-extrabold bg-purple-600 text-white transition";
+        } else {
+            b.className = "live-dock-btn px-2.5 py-1 rounded-lg font-bold text-slate-300 hover:text-white transition";
+        }
+    });
+
+    if (side === "left") {
+        wrapper.className = "w-full flex flex-col lg:flex-row items-center justify-center gap-4";
+        dock.className = "order-2 lg:order-1 bg-slate-950/90 border border-purple-500/35 rounded-2xl p-3.5 flex flex-col items-center justify-between gap-3 min-w-[210px]";
+        canvasHolder.className = "order-1 lg:order-2 flex-1 flex justify-center w-full";
+    } else if (side === "right") {
+        wrapper.className = "w-full flex flex-col lg:flex-row items-center justify-center gap-4";
+        canvasHolder.className = "order-1 flex-1 flex justify-center w-full";
+        dock.className = "order-2 bg-slate-950/90 border border-purple-500/35 rounded-2xl p-3.5 flex flex-col items-center justify-between gap-3 min-w-[210px]";
+    } else {
+        // Bottom
+        wrapper.className = "w-full flex flex-col items-center justify-center gap-3";
+        canvasHolder.className = "order-1 flex justify-center w-full";
+        dock.className = "order-2 bg-slate-950/90 border border-purple-500/35 rounded-2xl p-3 flex flex-row flex-wrap items-center justify-center gap-5 w-full max-w-xl";
+    }
+}
+
+document.querySelectorAll(".live-dock-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        applyMobileDockPosition(btn.dataset.liveDock);
+        showToast(`Playing Dashboard moved to ${btn.dataset.liveDock.toUpperCase()}!`);
+    });
+});
+applyMobileDockPosition("right");
+
+document.getElementById("save-profile-btn").addEventListener("click", () => navigateToPage(3));
+document.getElementById("open-settings-btn").addEventListener("click", () => navigateToPage(2));
+
+function getStageBestTime(lvlId) {
+    const val = localStorage.getItem(`aryan_ditch_best_lvl_${lvlId}`);
+    return val ? `${val}s` : "--";
+}
+
+function refreshDashboardUI() {
+    const isEasy = playerState.difficulty === "easy";
+    document.getElementById("dashboard-student-summary").textContent =
+        `${playerState.course} • Bunking ${playerState.subject} • ${isEasy ? "Easy Mode" : "Hard Mode"} • Controls: ${playerState.dockSide.toUpperCase()}`;
+
+    document.getElementById("progress-counter-badge").textContent =
+        `Stage ${Math.min(4, playerState.unlockedLevel)} / 4 Unlocked`;
+
+    const grid = document.getElementById("levels-grid");
+    grid.innerHTML = "";
+
+    LEVEL_META.forEach(lvl => {
+        const isUnlocked = lvl.id <= playerState.unlockedLevel;
+        const card = document.createElement("div");
+        card.className = isUnlocked
+            ? "bg-slate-900/95 border-2 border-purple-500/80 rounded-2xl p-4 flex flex-col justify-between shadow-lg shadow-purple-950/30 transition hover:-translate-y-1 cursor-pointer"
+            : "bg-slate-900/50 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between opacity-70 cursor-not-allowed transition";
+
+        const enemyInfo = isEasy ? lvl.enemySummaryEasy : lvl.enemySummaryHard;
+
+        card.innerHTML = `
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="px-2.5 py-0.5 rounded-md ${isUnlocked ? "bg-emerald-500/20 border border-emerald-400/40 text-emerald-300" : "bg-slate-800 text-slate-400"} text-[10px] font-extrabold">
+                        ${isUnlocked ? `STAGE ${lvl.id} • UNLOCKED` : `STAGE ${lvl.id} • LOCKED 🔒`}
+                    </span>
+                    <span class="text-xs font-mono text-amber-400">${getStageBestTime(lvl.id)}</span>
+                </div>
+                <h3 class="text-base sm:text-lg font-extrabold text-white">${lvl.name}</h3>
+                <p class="text-xs text-slate-400 mt-1 leading-relaxed">${lvl.desc}</p>
+                <div class="mt-3 pt-2 border-t border-slate-800/90 text-[11px] text-purple-300 font-semibold">
+                    ⚠️ ${enemyInfo}
+                </div>
+            </div>
+            <button class="w-full py-2.5 mt-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 ${isUnlocked ? "gemini-btn" : "bg-slate-950 border border-slate-800 text-slate-500"}">
+                <span>${isUnlocked ? `Play Stage ${lvl.id}` : `Beat Stage ${lvl.id - 1} First`}</span>
+                <i class="fa-solid ${isUnlocked ? "fa-play" : "fa-lock"} text-xs"></i>
+            </button>
+        `;
+
+        card.addEventListener("click", () => {
+            if (!isUnlocked) {
+                playSfx("locked");
+                card.classList.remove("shake-card");
+                void card.offsetWidth;
+                card.classList.add("shake-card");
+                showToast(`🔒 Locked! Complete Stage ${lvl.id - 1} (${LEVEL_META[lvl.id - 2].name}) first to unlock ${lvl.name}!`);
+                return;
+            }
+            handleStageLaunchRequest(lvl.id);
+        });
+
+        grid.appendChild(card);
+    });
+}
+
+function handleStageLaunchRequest(levelId) {
+    playerState.activeLevel = levelId;
+    if (levelId === 1) {
+        // Play 7.5s Animated Intro Promo Trailer of student realizing lecture is boring!
+        startAnimatedCutscene("intro");
+    } else if (levelId === 2) {
+        openLabSelectionModal();
+    } else {
+        launchGameplayStage(levelId);
+    }
+}
+
+document.getElementById("watch-intro-again-btn").addEventListener("click", () => {
+    playerState.activeLevel = 1;
+    startAnimatedCutscene("intro");
+});
+
+// Level 2 Lab Selection Modal
+const labModal = document.getElementById("lab-select-modal");
+function openLabSelectionModal() {
+    const box = document.getElementById("lab-choices-box");
+    box.innerHTML = "";
+    const labs = COURSE_LABS[playerState.course] || COURSE_LABS["B.Tech"];
+    playerState.selectedLab = labs[0];
+
+    labs.forEach((labName, i) => {
+        const btn = document.createElement("button");
+        btn.className = `opt-lab-choice bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs sm:text-sm font-bold text-white transition ${i === 0 ? "gemini-pill-active" : ""}`;
+        btn.innerHTML = `<i class="fa-solid fa-flask-vial text-emerald-400 mr-1.5"></i> ${labName}`;
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".opt-lab-choice").forEach(b => b.classList.remove("gemini-pill-active"));
+            btn.classList.add("gemini-pill-active");
+            playerState.selectedLab = labName;
+            playSfx("click");
+        });
+        box.appendChild(btn);
+    });
+
+    labModal.classList.remove("hidden");
+}
+
+document.getElementById("cancel-lab-modal-btn").addEventListener("click", () => {
+    labModal.classList.add("hidden");
+});
+document.getElementById("confirm-lab-start-btn").addEventListener("click", () => {
+    labModal.classList.add("hidden");
+    launchGameplayStage(2);
+});
+
+// Developer Section: Send Idea & Copy Email
+document.getElementById("send-idea-btn").addEventListener("click", () => {
+    const ideaInput = document.getElementById("idea-input");
+    const idea = ideaInput.value.trim();
+    if (!idea) {
+        showToast("Write your game or app idea first so we can build it together!");
+        return;
+    }
+    const subject = encodeURIComponent("Collaboration Idea for Aryan Yadav (Ditch Classroom)");
+    const body = encodeURIComponent(`Hey Aryan!\n\nI played Ditch Classroom and wanted to share an idea we can build together:\n\n"${idea}"\n\nLet's connect!`);
+    window.open(`mailto:arynyadav187@gmail.com?subject=${subject}&body=${body}`, "_blank");
+    ideaInput.value = "";
+    showToast("Opening email to send your idea to Aryan! 🚀");
+});
+
+document.getElementById("copy-email-btn").addEventListener("click", () => {
+    const temp = document.createElement("textarea");
+    temp.value = "arynyadav187@gmail.com";
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+    showToast("Copied arynyadav187@gmail.com to clipboard!");
+});
+
+/* ============================================================================
+   5. CINEMATIC ANIMATED PROMO TRAILERS (7.5s INTRO & 8.5s FINALE LEAVING HOME)
+   ============================================================================ */
+const csCanvas = document.getElementById("cutsceneCanvas");
+const csCtx = csCanvas.getContext("2d");
+let cutsceneActive = false;
+let cutsceneType = "intro"; // 'intro' | 'finale'
+let cutsceneElapsed = 0;
+let cutsceneDuration = 7.5;
+let ideaSoundPlayed = false;
+
+function startAnimatedCutscene(type) {
+    cutsceneType = type;
+    cutsceneElapsed = 0;
+    cutsceneDuration = type === "intro" ? 7.5 : 8.5;
+    ideaSoundPlayed = false;
+    cutsceneActive = true;
+
+    navigateToPage(4);
+    if (type === "intro") {
+        document.getElementById("cutscene-badge-text").textContent = "Animated Promo Trailer • Boring Class";
+        document.getElementById("skip-cutscene-btn").querySelector("span").textContent = "Skip to Gameplay";
+        playSoundMusic("cutscene");
+    } else {
+        document.getElementById("cutscene-badge-text").textContent = "Finale Victory Promo • Leaving For House!";
+        document.getElementById("skip-cutscene-btn").querySelector("span").textContent = "Finish to Dashboard";
+        playSoundMusic("finale");
+    }
+}
+
+document.getElementById("skip-cutscene-btn").addEventListener("click", () => {
+    finishCutscene();
+});
+
+function finishCutscene() {
+    if (!cutsceneActive) return;
+    cutsceneActive = false;
+    if (cutsceneType === "intro") {
+        launchGameplayStage(playerState.activeLevel);
+    } else {
+        navigateToPage(3);
+    }
+}
+
+function updateAndDrawCutscene(dt) {
+    if (!cutsceneActive) return;
+    cutsceneElapsed += dt;
+    const rem = Math.max(0, cutsceneDuration - cutsceneElapsed).toFixed(1);
+    document.getElementById("cutscene-timer-label").textContent = `${rem}s`;
+
+    const w = csCanvas.width;
+    const h = csCanvas.height;
+    csCtx.clearRect(0, 0, w, h);
+
+    if (cutsceneType === "intro") {
+        // 7.5-Second Animated Promo: Realizing Lecture is Boring -> Deciding to Bunk!
+        const t = cutsceneElapsed;
+        const captionEl = document.getElementById("cutscene-caption");
+
+        // Classroom Background
+        csCtx.fillStyle = "#0f172a";
+        csCtx.fillRect(0, 0, w, h);
+        csCtx.fillStyle = "#1e293b";
+        csCtx.fillRect(0, h - 110, w, 110);
+
+        // Big Green Blackboard
+        csCtx.fillStyle = "#064e3b";
+        csCtx.fillRect(90, 40, 440, 175);
+        csCtx.strokeStyle = "#d97706";
+        csCtx.lineWidth = 6;
+        csCtx.strokeRect(90, 40, 440, 175);
+
+        // Boring Equations on Blackboard
+        csCtx.fillStyle = "rgba(255,255,255,0.85)";
+        csCtx.font = "bold 16px monospace";
+        csCtx.fillText(`${playerState.course}: ${playerState.subject} (3-Hour Lecture)`, 115, 75);
+        csCtx.font = "14px monospace";
+        csCtx.fillText("∫ f(x)dx = lim (n→∞) Σ [Boring Theory #402]...", 115, 110);
+        csCtx.fillText("Attendance Sheet Locked • No Proxy Allowed", 115, 140);
+        if (t > 1.2) {
+            csCtx.fillText("Blah... Blah... Assignment due at 5 PM...", 115, 175);
+        }
+
+        // Exit Door on the Right
+        csCtx.fillStyle = "#22c55e";
+        csCtx.fillRect(670, 160, 85, 190);
+        csCtx.fillStyle = "#052e16";
+        csCtx.font = "bold 18px sans-serif";
+        csCtx.fillText("EXIT", 692, 260);
+
+        // Professor at Blackboard
+        const profX = 240 + Math.sin(t * 3) * 18;
+        const profY = 235;
+        csCtx.fillStyle = "#581c87";
+        csCtx.beginPath();
+        csCtx.arc(profX, profY, 26, 0, Math.PI * 2);
+        csCtx.fill();
+        csCtx.fillStyle = "#fde68a";
+        csCtx.beginPath();
+        csCtx.arc(profX, profY - 26, 20, 0, Math.PI * 2);
+        csCtx.fill();
+
+        // Professor Speech Bubble
+        csCtx.fillStyle = "#fef08a";
+        csCtx.beginPath();
+        csCtx.roundRect(profX + 30, profY - 75, 220, 38, 10);
+        csCtx.fill();
+        csCtx.fillStyle = "#0f172a";
+        csCtx.font = "bold 13px sans-serif";
+        if (t < 5.0) {
+            csCtx.fillText("📢 'Copy all 48 slides right now...'", profX + 42, profY - 51);
+        } else {
+            csCtx.fillStyle = "#ef4444";
+            csCtx.fillText("❗ 'HEY! WHERE ARE YOU RUNNING?!'", profX + 38, profY - 51);
+        }
+
+        // Student Desk & Student Animation Across 3 Phases
+        let stuX = 420;
+        let stuY = 340;
+        if (t < 2.6) {
+            captionEl.textContent = "Scene 1/3: Another endless, sleep-inducing lecture drags on...";
+            // Sleeping / Bored Zzz bubbles
+            csCtx.fillStyle = "#94a3b8";
+            csCtx.font = "bold 20px sans-serif";
+            csCtx.fillText("Zzz...", stuX + 20, stuY - 45 - (t * 15) % 25);
+            csCtx.fillText("💤", stuX - 35, stuY - 55);
+        } else if (t < 5.0) {
+            captionEl.textContent = "Scene 2/3: 💡 EUREKA! Life is too short for this — TIME TO BUNK!";
+            if (!ideaSoundPlayed) {
+                playSfx("idea");
+                ideaSoundPlayed = true;
+            }
+            // Glowing Lightbulb & Excitement Aura
+            csCtx.fillStyle = "rgba(250, 204, 21, 0.22)";
+            csCtx.beginPath();
+            csCtx.arc(stuX, stuY - 20, 58 + Math.sin(t * 15) * 6, 0, Math.PI * 2);
+            csCtx.fill();
+
+            csCtx.font = "36px sans-serif";
+            csCtx.fillText("💡", stuX - 18, stuY - 62);
+
+            csCtx.fillStyle = "#38bdf8";
+            csCtx.beginPath();
+            csCtx.roundRect(stuX - 110, stuY - 120, 230, 38, 10);
+            csCtx.fill();
+            csCtx.fillStyle = "#0f172a";
+            csCtx.font = "bold 14px sans-serif";
+            csCtx.fillText("Wait... I can DITCH this class! 🚀", stuX - 98, stuY - 96);
+        } else {
+            captionEl.textContent = "Scene 3/3: Sprinting for the door! Dodge the Professor and make your escape!";
+            const dashProgress = (t - 5.0) / 2.5;
+            stuX = 420 + dashProgress * 270;
+            stuY = 340 - Math.abs(Math.sin(t * 18)) * 14;
+
+            // Speed dust lines
+            csCtx.strokeStyle = "#38bdf8";
+            csCtx.lineWidth = 3;
+            for (let i = 0; i < 4; i++) {
+                csCtx.beginPath();
+                csCtx.moveTo(stuX - 35 - i * 15, stuY - 10 + i * 8);
+                csCtx.lineTo(stuX - 65 - i * 15, stuY - 10 + i * 8);
+                csCtx.stroke();
+            }
+        }
+
+        // Wooden Bench
+        csCtx.fillStyle = "#b45309";
+        csCtx.fillRect(370, 355, 110, 40);
+
+        // Draw Student Character
+        csCtx.fillStyle = playerState.outfitColor;
+        csCtx.beginPath();
+        csCtx.arc(stuX, stuY, 24, 0, Math.PI * 2);
+        csCtx.fill();
+        csCtx.fillStyle = "#fed7aa";
+        csCtx.beginPath();
+        csCtx.arc(stuX, stuY - 24, 18, 0, Math.PI * 2);
+        csCtx.fill();
+        csCtx.fillStyle = "#ef4444";
+        csCtx.beginPath();
+        csCtx.arc(stuX, stuY - 28, 18, Math.PI, 0);
+        csCtx.fill();
+    } 
+    else {
+        // 8.5-Second FINALE VICTORY MOVIE: Successfully Leaving Campus for Home!
+        const t = cutsceneElapsed;
+        const captionEl = document.getElementById("cutscene-caption");
+
+        // Sunset Gradient Sky
+        const skyGrad = csCtx.createLinearGradient(0, 0, 0, h);
+        skyGrad.addColorStop(0, "#1e1b4b");
+        skyGrad.addColorStop(0.55, "#7e22ce");
+        skyGrad.addColorStop(1, "#f97316");
+        csCtx.fillStyle = skyGrad;
+        csCtx.fillRect(0, 0, w, h);
+
+        // Glowing Setting Sun
+        csCtx.fillStyle = "rgba(253, 224, 71, 0.85)";
+        csCtx.beginPath();
+        csCtx.arc(160, 140, 52, 0, Math.PI * 2);
+        csCtx.fill();
+
+        // Road & Grass
+        csCtx.fillStyle = "#064e3b";
+        csCtx.fillRect(0, h - 140, w, 140);
+        csCtx.fillStyle = "#334155";
+        csCtx.fillRect(0, h - 95, w, 75);
+
+        // Animated Road Stripes
+        csCtx.fillStyle = "#fde047";
+        for (let i = 0; i < 10; i++) {
+            const rx = ((i * 110 - t * 140) % (w + 110) + (w + 110)) % (w + 110) - 60;
+            csCtx.fillRect(rx, h - 62, 55, 8);
+        }
+
+        // Left Side: College Gate left behind with panting guards
+        const gateX = Math.max(-220, 70 - t * 35);
+        csCtx.fillStyle = "#475569";
+        csCtx.fillRect(gateX, 170, 18, 160);
+        csCtx.fillRect(gateX + 110, 170, 18, 160);
+        csCtx.fillStyle = "#0f172a";
+        csCtx.fillRect(gateX - 10, 140, 150, 35);
+        csCtx.fillStyle = "#fbbf24";
+        csCtx.font = "bold 12px sans-serif";
+        csCtx.fillText("CAMPUS MAIN GATE", gateX + 5, 162);
+
+        // Cozy Home on the Right Side
+        const homeX = 560;
+        const homeY = 185;
+        // House Walls
+        csCtx.fillStyle = "#fef3c7";
+        csCtx.fillRect(homeX, homeY, 170, 140);
+        // Roof
+        csCtx.fillStyle = "#dc2626";
+        csCtx.beginPath();
+        csCtx.moveTo(homeX - 20, homeY);
+        csCtx.lineTo(homeX + 85, homeY - 70);
+        csCtx.lineTo(homeX + 190, homeY);
+        csCtx.closePath();
+        csCtx.fill();
+        // Door & Warm Lit Window
+        csCtx.fillStyle = "#78350f";
+        csCtx.fillRect(homeX + 65, homeY + 65, 42, 75);
+        csCtx.fillStyle = "#fde047";
+        csCtx.fillRect(homeX + 20, homeY + 35, 32, 32);
+        csCtx.fillRect(homeX + 118, homeY + 35, 32, 32);
+
+        // "HOME SWEET HOME" Sign
+        csCtx.fillStyle = "#10b981";
+        csCtx.beginPath();
+        csCtx.roundRect(homeX + 15, homeY - 22, 140, 26, 8);
+        csCtx.fill();
+        csCtx.fillStyle = "#052e16";
+        csCtx.font = "bold 12px sans-serif";
+        csCtx.fillText("🏡 SWEET HOME", homeX + 38, homeY - 5);
+
+        // Student happily running home
+        const progress = Math.min(1, t / 6.0);
+        const stuX = 140 + progress * 440;
+        const stuY = h - 75 - Math.abs(Math.sin(t * 14)) * 12;
+
+        csCtx.fillStyle = playerState.outfitColor;
+        csCtx.beginPath();
+        csCtx.arc(stuX, stuY, 22, 0, Math.PI * 2);
+        csCtx.fill();
+        csCtx.fillStyle = "#fed7aa";
+        csCtx.beginPath();
+        csCtx.arc(stuX, stuY - 22, 16, 0, Math.PI * 2);
+        csCtx.fill();
+
+        // Celebratory Banner Overlay
+        csCtx.fillStyle = "rgba(15, 23, 42, 0.85)";
+        csCtx.beginPath();
+        csCtx.roundRect(95, 24, 610, 92, 18);
+        csCtx.fill();
+        csCtx.strokeStyle = "#a855f7";
+        csCtx.lineWidth = 3;
+        csCtx.stroke();
+
+        csCtx.fillStyle = "#4ade80";
+        csCtx.font = "bold 24px 'Space Grotesk', sans-serif";
+        csCtx.textAlign = "center";
+        csCtx.fillText("🎉 SUCCESSFULLY FINISHED ALL 4 LEVELS! 🎉", w / 2, 60);
+        csCtx.fillStyle = "#f8fafc";
+        csCtx.font = "bold 16px 'Plus Jakarta Sans', sans-serif";
+        csCtx.fillText("FINALLY LEAVING FOR HOUSE — FREEDOM UNLOCKED! 🏡☕", w / 2, 92);
+        csCtx.textAlign = "left";
+
+        captionEl.textContent = "You ditched the Classroom, Lab, Corridor, and Campus Guards — Welcome Home!";
+    }
+
+    if (cutsceneElapsed >= cutsceneDuration) {
+        finishCutscene();
+    }
+}
+
+/* ============================================================================
+   6. ALL 4 COMPLEX MAZE MAPS & MULTI-STAGE GAME ENGINE (21 x 13 TILES)
+   ============================================================================ */
+const canvas = document.getElementById("mazeCanvas");
+const ctx = canvas.getContext("2d");
+
+const TILE = 40;
+const COLS = 21;
+const ROWS = 13;
+
+/*
+   Tile Codes across Levels:
+   0: Walkable Floor / Grass
+   1: Outer / Inner Solid Wall / Hedge
+   2: Primary Obstacle (L1: Bench, L2: Lab Workbench, L3: Blue Lockers, L4: Campus Hedge/Bush)
+   3: Boss Station (L1: Teacher Podium, L2: Fume Hood, L3: Notice Pillar, L4: Campus Fountain)
+   4: Secondary Prop (L1: Bookshelf, L2: Microscope Rack, L3: Water Cooler, L4: Guard Booth / Bike)
+   5: Green EXIT Door / Main Gate
+   6: Top Banner Wall (L1: Chalkboard, L2: Lab Safety Board, L3: Trophy Case, L4: Iron Fence)
+   7: Hazard Slow Tile (L2: Glowing Green Acid Spill, L4: Mud Puddle)
+*/
+const STAGE_MAPS = {
+    // LEVEL 1: DITCH CLASSROOM (Intricate multi-aisle lecture maze)
+    1: [
+        [1, 6, 6, 6, 6, 6, 6, 1, 1, 1, 6, 6, 6, 6, 6, 6, 6, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 2, 0, 0, 3, 3, 0, 0, 0, 2, 0, 0, 0, 0, 0, 4, 1],
+        [1, 0, 2, 2, 0, 2, 0, 2, 2, 0, 0, 2, 0, 2, 0, 2, 2, 2, 0, 4, 1],
+        [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 0, 1],
+        [1, 0, 2, 0, 2, 2, 2, 0, 2, 0, 0, 0, 0, 2, 2, 2, 0, 2, 2, 0, 1],
+        [1, 4, 0, 0, 2, 0, 0, 0, 2, 2, 2, 0, 2, 2, 0, 0, 0, 0, 0, 0, 1],
+        [1, 4, 0, 2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 1],
+        [1, 0, 0, 0, 0, 0, 2, 2, 2, 0, 2, 2, 2, 0, 2, 2, 0, 0, 0, 0, 1],
+        [1, 0, 2, 2, 2, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1],
+        [1, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 2, 2, 2, 0, 2, 2, 0, 0, 1],
+        [1, 0, 2, 0, 2, 2, 2, 2, 0, 2, 2, 0, 0, 0, 2, 0, 0, 0, 0, 2, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 2, 0, 5, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    ],
+
+    // LEVEL 2: DITCH LAB (Lab tables, microscope racks, fume hoods & green chemical spills [7])
+    2: [
+        [1, 6, 6, 6, 6, 1, 1, 6, 6, 6, 6, 6, 1, 1, 6, 6, 6, 6, 1, 1, 1],
+        [1, 0, 0, 7, 0, 0, 0, 0, 3, 3, 3, 0, 0, 0, 0, 7, 0, 0, 0, 4, 1],
+        [1, 0, 2, 2, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 0, 2, 4, 1],
+        [1, 0, 2, 0, 0, 0, 2, 2, 2, 0, 2, 2, 2, 0, 0, 7, 2, 0, 2, 0, 1],
+        [1, 0, 0, 0, 4, 0, 0, 7, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 1],
+        [1, 2, 2, 0, 4, 2, 2, 0, 2, 2, 2, 2, 0, 2, 2, 0, 2, 2, 2, 0, 1],
+        [1, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 2, 0, 0, 0, 0, 2, 7, 0, 0, 1],
+        [1, 0, 2, 2, 2, 0, 0, 0, 0, 0, 7, 0, 0, 2, 2, 0, 2, 0, 2, 0, 1],
+        [1, 0, 2, 7, 0, 0, 2, 2, 2, 0, 2, 2, 0, 2, 0, 0, 0, 0, 2, 0, 1],
+        [1, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 2, 2, 0, 2, 0, 1],
+        [1, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 0, 2, 2, 2, 2, 0, 0, 0, 0, 1],
+        [1, 0, 2, 0, 0, 7, 0, 0, 2, 0, 0, 0, 0, 7, 0, 0, 0, 2, 0, 5, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    ],
+
+    // LEVEL 3: DITCH CORRIDOR (Lockers, water coolers, pillars & Clingy Friends chasing you)
+    3: [
+        [1, 6, 6, 6, 1, 6, 6, 6, 1, 6, 6, 6, 1, 6, 6, 6, 1, 6, 6, 1, 1],
+        [1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, 2, 0, 0, 0, 0, 0, 1],
+        [1, 0, 2, 2, 2, 0, 2, 0, 2, 2, 2, 2, 2, 0, 2, 0, 2, 2, 2, 0, 1],
+        [1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+        [1, 0, 2, 0, 2, 2, 2, 2, 0, 2, 3, 2, 0, 2, 2, 2, 2, 0, 2, 0, 1],
+        [1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1],
+        [1, 2, 2, 0, 2, 0, 2, 2, 2, 0, 2, 0, 2, 2, 2, 0, 2, 0, 2, 2, 1],
+        [1, 4, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1],
+        [1, 2, 2, 0, 2, 2, 2, 0, 2, 2, 2, 2, 2, 0, 2, 2, 2, 0, 2, 2, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
+        [1, 0, 2, 2, 2, 2, 0, 2, 2, 0, 2, 0, 2, 2, 0, 2, 2, 0, 2, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 5, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    ],
+
+    // LEVEL 4: DITCH THE CAMPUS (Campus hedges, fountain, security booths & 2 Security Guards)
+    4: [
+        [1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1],
+        [1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1],
+        [1, 0, 2, 0, 2, 0, 2, 2, 2, 0, 0, 0, 2, 2, 2, 0, 2, 0, 2, 0, 1],
+        [1, 0, 2, 0, 0, 0, 2, 7, 0, 0, 2, 0, 0, 7, 2, 0, 0, 0, 2, 0, 1],
+        [1, 0, 2, 2, 2, 0, 2, 0, 2, 2, 2, 2, 2, 0, 2, 0, 2, 2, 2, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 2, 2, 0, 2, 2, 2, 0, 0, 3, 3, 3, 0, 0, 2, 2, 2, 0, 2, 2, 1],
+        [1, 0, 0, 0, 2, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 2, 0, 0, 0, 1],
+        [1, 0, 2, 2, 2, 0, 2, 2, 2, 0, 2, 0, 2, 2, 2, 0, 2, 2, 2, 0, 1],
+        [1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 1],
+        [1, 0, 2, 2, 2, 0, 2, 0, 2, 2, 2, 2, 2, 0, 2, 0, 2, 0, 0, 0, 1],
+        [1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 2, 4, 0, 5, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    ]
+};
+
+let currentMap = STAGE_MAPS[1];
+let gameRunning = false;
+let gameStartTimestamp = 0;
+let currentRunSeconds = "0.0";
+
+const keys = {};
+const touchDir = { up: false, down: false, left: false, right: false };
+
+window.addEventListener("keydown", e => {
+    keys[e.key] = true;
+    if (e.key === " " && gameRunning) {
+        e.preventDefault();
+        triggerPlayerDash();
+    }
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key) && gameRunning) {
+        e.preventDefault();
+    }
+});
+window.addEventListener("keyup", e => { keys[e.key] = false; });
+
+document.querySelectorAll(".dpad-btn").forEach(btn => {
+    const dir = btn.dataset.dir;
+    const startPress = e => { e.preventDefault(); touchDir[dir] = true; btn.classList.add("pressed"); };
+    const endPress = e => { e.preventDefault(); touchDir[dir] = false; btn.classList.remove("pressed"); };
+
+    btn.addEventListener("mousedown", startPress);
+    btn.addEventListener("mouseup", endPress);
+    btn.addEventListener("mouseleave", endPress);
+    btn.addEventListener("touchstart", startPress, { passive: false });
+    btn.addEventListener("touchend", endPress, { passive: false });
+});
+
+document.getElementById("mobile-dash-btn").addEventListener("click", e => {
+    e.preventDefault();
+    triggerPlayerDash();
+});
+
+let student, chasers = [], patrollers = [], projectiles = [], energyCans = [], floatingTexts = [];
+
+function triggerPlayerDash() {
+    if (!gameRunning || !student) return;
+    if (student.dashCooldown <= 0 && student.stunTimer <= 0) {
+        student.boostTimer = Math.max(student.boostTimer, 1.2);
+        student.dashCooldown = 4.0;
+        playSfx("boost");
+        floatingTexts.push({ text: "Sprint Dash! 💨", x: student.x, y: student.y - 20, bg: "#c084fc", timer: 0.9 });
+    }
+}
+
+function renderHeartsHUD() {
+    const h = Math.max(0, student.hearts);
+    const full = Math.floor(h);
+    const half = (h % 1) >= 0.5 ? 1 : 0;
+    const empty = 5 - full - half;
+    document.getElementById("hud-hearts").textContent =
+        "❤️".repeat(full) + (half ? "💔" : "") + "🖤".repeat(empty);
+}
+
+function launchGameplayStage(levelId) {
+    playerState.activeLevel = levelId;
+    currentMap = STAGE_MAPS[levelId];
+    const isEasy = playerState.difficulty === "easy";
+
+    navigateToPage(5);
+
+    const meta = LEVEL_META[levelId - 1];
+    document.getElementById("hud-level-pill").textContent = meta.badge;
+    document.getElementById("hud-best-time").textContent = getStageBestTime(levelId);
+
+    const missionLabels = {
+        1: `Bunk ${playerState.subject} & reach the green EXIT!`,
+        2: `Escape ${playerState.selectedLab}! Avoid green spills!`,
+        3: `Dodge Clingy Friends in the Corridor!`,
+        4: `Evade the 2 Security Guards & reach the Main Gate!`
+    };
+    document.getElementById("dock-mission-text").textContent = missionLabels[levelId];
+
+    student = {
+        x: 1.5 * TILE,
+        y: 11.5 * TILE,
+        radius: 11.5,
+        speed: isEasy ? 3.0 : 2.75,
+        dirX: 1,
+        dirY: 0,
+        isMoving: false,
+        animTime: 0,
+        hearts: 5.0,
+        stunTimer: 0,
+        boostTimer: 0,
+        dashCooldown: 0,
+        invulnTimer: 0
+    };
+
+    chasers = [];
+    patrollers = [];
+    projectiles = [];
+    floatingTexts = [];
+
+    if (levelId === 1) {
+        // Level 1: 1 Professor (Chaser + Chalk thrower) + Hard mode adds 2 Nerds
+        chasers.push({
+            x: 10.5 * TILE, y: 1.5 * TILE, spawnX: 10.5 * TILE, spawnY: 1.5 * TILE,
+            radius: 13, speed: isEasy ? 1.15 : 1.48, role: "professor",
+            dirX: 0, dirY: 1, isMoving: true, animTime: 0, pathTimer: 0,
+            throwCooldown: 1.8, targetTile: { r: 1, c: 10 }, name: "Professor"
+        });
+        if (!isEasy) {
+            patrollers.push(
+                {
+                    x: 5.5 * TILE, y: 5.5 * TILE, role: "nerd",
+                    waypoints: [{ r: 5, c: 5 }, { r: 5, c: 11 }],
+                    wpIndex: 1, speed: 1.25, radius: 11, animTime: 0, cooldown: 0, dirX: 1, dirY: 0
+                },
+                {
+                    x: 14.5 * TILE, y: 8.5 * TILE, role: "nerd",
+                    waypoints: [{ r: 8, c: 11 }, { r: 8, c: 16 }],
+                    wpIndex: 1, speed: 1.25, radius: 11, animTime: 0, cooldown: 0, dirX: 1, dirY: 0
+                }
+            );
+        }
+    } 
+    else if (levelId === 2) {
+        // Level 2: Lab Instructor (throws test tubes) + 1 Lab Assistant (Easy) or 2 Lab Assistants (Hard)
+        chasers.push({
+            x: 11.5 * TILE, y: 1.5 * TILE, spawnX: 11.5 * TILE, spawnY: 1.5 * TILE,
+            radius: 13, speed: isEasy ? 1.18 : 1.5, role: "lab_instructor",
+            dirX: 0, dirY: 1, isMoving: true, animTime: 0, pathTimer: 0,
+            throwCooldown: 2.0, targetTile: { r: 1, c: 11 }, name: "Lab Prof"
+        });
+        // 1st Lab Assistant (Always present)
+        patrollers.push({
+            x: 5.5 * TILE, y: 4.5 * TILE, role: "lab_assistant",
+            waypoints: [{ r: 4, c: 2 }, { r: 4, c: 13 }],
+            wpIndex: 1, speed: 1.35, radius: 11.5, animTime: 0, cooldown: 0, dirX: 1, dirY: 0
+        });
+        // Extra Lab Assistant in Hard Mode!
+        if (!isEasy) {
+            patrollers.push({
+                x: 15.5 * TILE, y: 8.5 * TILE, role: "lab_assistant",
+                waypoints: [{ r: 8, c: 12 }, { r: 8, c: 17 }, { r: 4, c: 17 }],
+                wpIndex: 1, speed: 1.45, radius: 11.5, animTime: 0, cooldown: 0, dirX: 1, dirY: 0
+            });
+        }
+    } 
+    else if (levelId === 3) {
+        // Level 3: Corridor — Escaping Friends trying to catch you to attend the lecture!
+        // Easy Mode: 2 Friends | Hard Mode: 3 Friends!
+        chasers.push(
+            {
+                x: 9.5 * TILE, y: 1.5 * TILE, spawnX: 9.5 * TILE, spawnY: 1.5 * TILE,
+                radius: 12, speed: isEasy ? 1.25 : 1.52, role: "friend",
+                dirX: 0, dirY: 1, isMoving: true, animTime: 0, pathTimer: 0,
+                throwCooldown: 999, targetTile: { r: 1, c: 9 }, name: "Friend Rahul", shirt: "#ec4899"
+            },
+            {
+                x: 18.5 * TILE, y: 5.5 * TILE, spawnX: 18.5 * TILE, spawnY: 5.5 * TILE,
+                radius: 12, speed: isEasy ? 1.18 : 1.45, role: "friend",
+                dirX: -1, dirY: 0, isMoving: true, animTime: 1.5, pathTimer: 0.1,
+                throwCooldown: 999, targetTile: { r: 5, c: 18 }, name: "Friend Aman", shirt: "#14b8a6"
+            }
+        );
+        if (!isEasy) {
+            // 3rd Friend in Hard Mode!
+            chasers.push({
+                x: 9.5 * TILE, y: 9.5 * TILE, spawnX: 9.5 * TILE, spawnY: 9.5 * TILE,
+                radius: 12, speed: 1.42, role: "friend",
+                dirX: 1, dirY: 0, isMoving: true, animTime: 3.0, pathTimer: 0.2,
+                throwCooldown: 999, targetTile: { r: 9, c: 9 }, name: "Topper Friend", shirt: "#f97316"
+            });
+        }
+    } 
+    else if (levelId === 4) {
+        // Level 4: Campus Ground — 2 Security Guards actively hunting you down!
+        chasers.push(
+            {
+                x: 9.5 * TILE, y: 1.5 * TILE, spawnX: 9.5 * TILE, spawnY: 1.5 * TILE,
+                radius: 13, speed: isEasy ? 1.28 : 1.58, role: "guard",
+                dirX: 0, dirY: 1, isMoving: true, animTime: 0, pathTimer: 0,
+                throwCooldown: 2.4, targetTile: { r: 1, c: 9 }, name: "Guard Sharma"
+            },
+            {
+                x: 17.5 * TILE, y: 7.5 * TILE, spawnX: 17.5 * TILE, spawnY: 7.5 * TILE,
+                radius: 13, speed: isEasy ? 1.22 : 1.52, role: "guard",
+                dirX: -1, dirY: 0, isMoving: true, animTime: 2.0, pathTimer: 0.15,
+                throwCooldown: 2.8, targetTile: { r: 7, c: 17 }, name: "Guard Singh"
+            }
+        );
+    }
+
+    energyCans = [
+        { x: 3.5 * TILE, y: 3.5 * TILE, active: true },
+        { x: 13.5 * TILE, y: 5.5 * TILE, active: true },
+        { x: 9.5 * TILE, y: 11.5 * TILE, active: true }
+    ];
+
+    renderHeartsHUD();
+    gameStartTimestamp = performance.now();
+    gameRunning = true;
+}
+
+function isWallTile(r, c) {
+    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return true;
+    const t = currentMap[r][c];
+    return t === 1 || t === 2 || t === 3 || t === 4 || t === 6;
+}
+
+function canEntityMove(x, y, radius) {
+    const pad = radius - 3;
+    const corners = [
+        { r: Math.floor((y - pad) / TILE), c: Math.floor((x - pad) / TILE) },
+        { r: Math.floor((y - pad) / TILE), c: Math.floor((x + pad) / TILE) },
+        { r: Math.floor((y + pad) / TILE), c: Math.floor((x - pad) / TILE) },
+        { r: Math.floor((y + pad) / TILE), c: Math.floor((x + pad) / TILE) }
+    ];
+    return !corners.some(pt => isWallTile(pt.r, pt.c));
+}
+
+function hasStraightLineOfSight(r1, c1, r2, c2) {
+    if (r1 === r2) {
+        for (let c = Math.min(c1, c2) + 1; c < Math.max(c1, c2); c++) {
+            if (isWallTile(r1, c)) return false;
+        }
+        return true;
+    }
+    if (c1 === c2) {
+        for (let r = Math.min(r1, r2) + 1; r < Math.max(r1, r2); r++) {
+            if (isWallTile(r, c1)) return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+function findNextStepBFS(sr, sc, gr, gc) {
+    const queue = [{ r: sr, c: sc, path: [] }];
+    const visited = new Set([`${sr},${sc}`]);
+    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+    while (queue.length > 0) {
+        const cur = queue.shift();
+        if (cur.r === gr && cur.c === gc) {
+            return cur.path[0] || { r: gr, c: gc };
+        }
+        for (const [dr, dc] of dirs) {
+            const nr = cur.r + dr;
+            const nc = cur.c + dc;
+            const key = `${nr},${nc}`;
+            if (!isWallTile(nr, nc) && !visited.has(key)) {
+                visited.add(key);
+                queue.push({ r: nr, c: nc, path: [...cur.path, { r: nr, c: nc }] });
+            }
+        }
+    }
+    return { r: sr, c: sc };
+}
+
+function inflictHeartDamage(amount, label) {
+    if (student.invulnTimer > 0) return;
+    student.hearts = Math.max(0, student.hearts - amount);
+    student.invulnTimer = 1.3;
+    renderHeartsHUD();
+    playSfx("hit");
+    floatingTexts.push({ text: label, x: student.x, y: student.y - 20, bg: "#fda4af", timer: 1.4 });
+
+    if (student.hearts <= 0) {
+        concludeStage(false);
+    }
+}
+
+function updateGameEngine(dt) {
+    if (!gameRunning) return;
+
+    currentRunSeconds = ((performance.now() - gameStartTimestamp) / 1000).toFixed(1);
+    document.getElementById("hud-timer").textContent = `${currentRunSeconds}s`;
+
+    if (student.invulnTimer > 0) student.invulnTimer -= dt;
+    if (student.boostTimer > 0) student.boostTimer -= dt;
+    if (student.dashCooldown > 0) student.dashCooldown -= dt;
+
+    const dashBtnLabel = document.getElementById("dash-btn-label");
+    dashBtnLabel.textContent = student.dashCooldown > 0
+        ? `RECHARGING (${student.dashCooldown.toFixed(1)}s)`
+        : "SPRINT DASH (SPACE)";
+
+    const sRow = Math.floor(student.y / TILE);
+    const sCol = Math.floor(student.x / TILE);
+    const onSlowSpill = currentMap[sRow] && currentMap[sRow][sCol] === 7;
+
+    const statusBadge = document.getElementById("hud-status-badge");
+
+    // 1. Update Student Movement
+    if (student.stunTimer > 0) {
+        student.stunTimer -= dt;
+        student.isMoving = false;
+        statusBadge.textContent = "Stunned! 🤓";
+    } else {
+        if (onSlowSpill) statusBadge.textContent = "Chemical Spill Slow! 🧪";
+        else if (student.boostTimer > 0) statusBadge.textContent = "Turbo Sprint! ⚡";
+        else statusBadge.textContent = "Sneaking";
+
+        let dx = 0, dy = 0;
+        if (keys["ArrowUp"] || keys["w"] || keys["W"] || touchDir.up) dy -= 1;
+        if (keys["ArrowDown"] || keys["s"] || keys["S"] || touchDir.down) dy += 1;
+        if (keys["ArrowLeft"] || keys["a"] || keys["A"] || touchDir.left) dx -= 1;
+        if (keys["ArrowRight"] || keys["d"] || keys["D"] || touchDir.right) dx += 1;
+
+        if (dx !== 0 || dy !== 0) {
+            const len = Math.hypot(dx, dy);
+            dx /= len; dy /= len;
+            student.dirX = dx; student.dirY = dy;
+            student.isMoving = true;
+            student.animTime += dt * 13;
+
+            let speedMult = student.boostTimer > 0 ? 1.45 : 1.0;
+            if (onSlowSpill) speedMult *= 0.58;
+
+            const activeSpeed = student.speed * speedMult;
+            const nextX = student.x + dx * activeSpeed;
+            const nextY = student.y + dy * activeSpeed;
+
+            if (canEntityMove(nextX, student.y, student.radius)) student.x = nextX;
+            if (canEntityMove(student.x, nextY, student.radius)) student.y = nextY;
+        } else {
+            student.isMoving = false;
+        }
+    }
+
+    // Energy Pickups
+    for (const can of energyCans) {
+        if (can.active && Math.hypot(student.x - can.x, student.y - can.y) < 22) {
+            can.active = false;
+            student.boostTimer = 3.5;
+            playSfx("boost");
+            floatingTexts.push({ text: "Turbo Energy! ⚡", x: student.x, y: student.y - 22, bg: "#86efac", timer: 1.2 });
+        }
+    }
+
+    // Check EXIT Tile (5)
+    const curR = Math.floor(student.y / TILE);
+    const curC = Math.floor(student.x / TILE);
+    if (currentMap[curR][curC] === 5) {
+        concludeStage(true);
+        return;
+    }
+
+    // 2. Update Active Chasers (Professor, Lab Instructor, Clingy Friends, Security Guards)
+    for (const ch of chasers) {
+        ch.animTime += dt * 9.5;
+        ch.pathTimer -= dt;
+        ch.throwCooldown -= dt;
+
+        const cRow = Math.floor(ch.y / TILE);
+        const cCol = Math.floor(ch.x / TILE);
+
+        if (ch.pathTimer <= 0) {
+            ch.targetTile = findNextStepBFS(cRow, cCol, curR, curC);
+            ch.pathTimer = 0.25;
+        }
+
+        const tx = (ch.targetTile.c + 0.5) * TILE;
+        const ty = (ch.targetTile.r + 0.5) * TILE;
+        const cdx = tx - ch.x;
+        const cdy = ty - ch.y;
+        const cDist = Math.hypot(cdx, cdy);
+
+        if (cDist > 1) {
+            ch.dirX = cdx / cDist;
+            ch.dirY = cdy / cDist;
+            ch.x += ch.dirX * ch.speed;
+            ch.y += ch.dirY * ch.speed;
+        }
+
+        // Line-of-Sight Projectile Throw (Chalk / Lab Tube / Whistle Wave)
+        if (ch.throwCooldown <= 0 && (cRow === curR || cCol === curC)) {
+            if (hasStraightLineOfSight(cRow, cCol, curR, curC)) {
+                const vx = student.x - ch.x;
+                const vy = student.y - ch.y;
+                const vlen = Math.hypot(vx, vy);
+                const dot = (vx / vlen) * ch.dirX + (vy / vlen) * ch.dirY;
+                if (dot > 0.15) {
+                    const pType = ch.role === "lab_instructor" ? "tube" : (ch.role === "guard" ? "whistle" : "chalk");
+                    projectiles.push({
+                        x: ch.x, y: ch.y,
+                        vx: (vx / vlen) * 5.0,
+                        vy: (vy / vlen) * 5.0,
+                        rot: 0,
+                        type: pType
+                    });
+                    ch.throwCooldown = 2.3;
+                    playSfx("chalk");
+                    const alertMsg = pType === "tube" ? "Flying Beaker! 🧪" : (pType === "whistle" ? "Guard Whistle! 📢" : "Chalk Attack! 🖍️");
+                    floatingTexts.push({ text: alertMsg, x: ch.x, y: ch.y - 22, bg: "#fde047", timer: 1.0 });
+                }
+            }
+        }
+
+        // Physical Catch Check (-1.0 Heart & Chaser resets to spawn)
+        if (Math.hypot(student.x - ch.x, student.y - ch.y) < student.radius + ch.radius - 2) {
+            const catchMsg = ch.role === "friend"
+                ? `${ch.name}: 'Attend Lecture!' (-1 ❤️)`
+                : (ch.role === "guard" ? "Guard Caught You! (-1 ❤️)" : "Caught! (-1.0 ❤️)");
+            inflictHeartDamage(1.0, catchMsg);
+            ch.x = ch.spawnX;
+            ch.y = ch.spawnY;
+        }
+    }
+
+    // 3. Update Flying Projectiles
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const p = projectiles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += dt * 14;
+
+        const pr = Math.floor(p.y / TILE);
+        const pc = Math.floor(p.x / TILE);
+        if (isWallTile(pr, pc)) {
+            projectiles.splice(i, 1);
+            continue;
+        }
+        if (Math.hypot(p.x - student.x, p.y - student.y) < student.radius + 5) {
+            projectiles.splice(i, 1);
+            inflictHeartDamage(0.5, "Projectile Hit! -0.5 ❤️");
+        }
+    }
+
+    // 4. Update Patrollers (Nerds in L1, Lab Assistants in L2)
+    for (const pt of patrollers) {
+        pt.animTime += dt * 8.5;
+        if (pt.cooldown > 0) pt.cooldown -= dt;
+
+        const wp = pt.waypoints[pt.wpIndex];
+        const wx = (wp.c + 0.5) * TILE;
+        const wy = (wp.r + 0.5) * TILE;
+        const ndx = wx - pt.x;
+        const ndy = wy - pt.y;
+        const nDist = Math.hypot(ndx, ndy);
+
+        if (nDist < 4) {
+            pt.wpIndex = (pt.wpIndex + 1) % pt.waypoints.length;
+        } else {
+            pt.dirX = ndx / nDist;
+            pt.dirY = ndy / nDist;
+            pt.x += pt.dirX * pt.speed;
+            pt.y += pt.dirY * pt.speed;
+        }
+
+        if (pt.cooldown <= 0 && Math.hypot(student.x - pt.x, student.y - pt.y) < student.radius + pt.radius) {
+            student.stunTimer = 1.1;
+            pt.cooldown = 4.0;
+            playSfx("chalk");
+            if (pt.role === "lab_assistant") {
+                inflictHeartDamage(0.5, "Lab Asst: 'Where is your Apron?!' -0.5 ❤️");
+            } else {
+                floatingTexts.push({
+                    text: `Nerd: 'Explain ${playerState.subject}!' 🤓`,
+                    x: pt.x, y: pt.y - 20, bg: "#fef08a", timer: 1.3
+                });
+            }
+        }
+    }
+
+    // 5. Floating Texts
+    floatingTexts.forEach(ft => { ft.y -= 18 * dt; ft.timer -= dt; });
+    floatingTexts = floatingTexts.filter(ft => ft.timer > 0);
+}
+
+/* ============================================================================
+   7. THEME-AWARE STAGE & CHARACTER RENDERING (L1, L2, L3, L4)
+   ============================================================================ */
+function drawStageEnvironment() {
+    const lvl = playerState.activeLevel;
+
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            const x = c * TILE;
+            const y = r * TILE;
+            const t = currentMap[r][c];
+
+            // Floor by Level Theme
+            if (lvl === 1) {
+                ctx.fillStyle = (r + c) % 2 === 0 ? "#e2e8f0" : "#cbd5e1";
+            } else if (lvl === 2) {
+                ctx.fillStyle = (r + c) % 2 === 0 ? "#ecfeff" : "#cffafe";
+            } else if (lvl === 3) {
+                ctx.fillStyle = (r + c) % 2 === 0 ? "#fef3c7" : "#fde68a";
+            } else {
+                ctx.fillStyle = (r + c) % 2 === 0 ? "#dcfce7" : "#bbf7d0";
+            }
+            ctx.fillRect(x, y, TILE, TILE);
+
+            if (t === 1) {
+                ctx.fillStyle = lvl === 4 ? "#14532d" : "#1e293b";
+                ctx.fillRect(x, y, TILE, TILE);
+                ctx.strokeStyle = "#0f172a";
+                ctx.strokeRect(x, y, TILE, TILE);
+            } 
+            else if (t === 6) {
+                ctx.fillStyle = "#1e293b";
+                ctx.fillRect(x, y, TILE, TILE);
+                ctx.fillStyle = lvl === 2 ? "#0f766e" : (lvl === 3 ? "#7c2d12" : "#064e3b");
+                ctx.fillRect(x + 2, y + 5, TILE - 4, TILE - 9);
+                ctx.strokeStyle = "#f59e0b";
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x + 2, y + 5, TILE - 4, TILE - 9);
+            } 
+            else if (t === 2) {
+                if (lvl === 1) {
+                    // Classroom Wooden Bench
+                    ctx.fillStyle = "#334155";
+                    ctx.fillRect(x + 7, y + 3, TILE - 14, 6);
+                    ctx.fillStyle = "#b45309";
+                    ctx.fillRect(x + 3, y + 9, TILE - 6, TILE - 14);
+                    ctx.fillStyle = "#f8fafc";
+                    ctx.fillRect(x + 9, y + 13, 10, 9);
+                } else if (lvl === 2) {
+                    // Black Granite Lab Workbench with Beakers
+                    ctx.fillStyle = "#1e293b";
+                    ctx.fillRect(x + 3, y + 6, TILE - 6, TILE - 12);
+                    ctx.strokeStyle = "#38bdf8";
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x + 3, y + 6, TILE - 6, TILE - 12);
+                    // Glowing Flasks
+                    ctx.fillStyle = (r + c) % 2 === 0 ? "#22c55e" : "#ec4899";
+                    ctx.beginPath();
+                    ctx.arc(x + 13, y + 18, 4.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = "#38bdf8";
+                    ctx.fillRect(x + 23, y + 12, 5, 11);
+                } else if (lvl === 3) {
+                    // Corridor Steel Blue Lockers
+                    ctx.fillStyle = "#1d4ed8";
+                    ctx.fillRect(x + 3, y + 3, TILE - 6, TILE - 6);
+                    ctx.strokeStyle = "#93c5fd";
+                    ctx.strokeRect(x + 5, y + 5, TILE - 10, TILE - 10);
+                    ctx.fillStyle = "#1e293b";
+                    ctx.fillRect(x + 9, y + 10, 8, 2);
+                    ctx.fillRect(x + 23, y + 10, 8, 2);
+                } else {
+                    // Campus Trimmed Green Hedge Bush
+                    ctx.fillStyle = "#15803d";
+                    ctx.beginPath();
+                    ctx.roundRect(x + 3, y + 3, TILE - 6, TILE - 6, 10);
+                    ctx.fill();
+                    ctx.fillStyle = "#4ade80";
+                    ctx.beginPath();
+                    ctx.arc(x + 13, y + 13, 4, 0, Math.PI * 2);
+                    ctx.arc(x + 26, y + 24, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } 
+            else if (t === 3) {
+                if (lvl === 4) {
+                    // Blue Water Fountain in Campus Center
+                    ctx.fillStyle = "#0284c7";
+                    ctx.fillRect(x + 2, y + 2, TILE - 4, TILE - 4);
+                    ctx.fillStyle = "#bae6fd";
+                    ctx.beginPath();
+                    ctx.arc(x + 20, y + 20, 9 + Math.sin(performance.now() * 0.008) * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = "#7c2d12";
+                    ctx.fillRect(x + 1, y + 4, TILE - 2, TILE - 8);
+                    ctx.fillStyle = "#fef08a";
+                    ctx.fillRect(x + 8, y + 12, 10, 8);
+                }
+            } 
+            else if (t === 4) {
+                ctx.fillStyle = "#44403c";
+                ctx.fillRect(x + 4, y + 2, TILE - 8, TILE - 4);
+                ctx.fillStyle = "#38bdf8";
+                ctx.fillRect(x + 8, y + 8, TILE - 16, TILE - 16);
+            } 
+            else if (t === 7) {
+                // Slow Hazard: Green Acid Spill (Lab) or Mud Puddle (Campus)
+                ctx.fillStyle = lvl === 2 ? "rgba(34, 197, 94, 0.55)" : "rgba(120, 53, 15, 0.55)";
+                ctx.beginPath();
+                ctx.ellipse(x + 20, y + 20, 16, 12, 0.2, 0, Math.PI * 2);
+                ctx.fill();
+            } 
+            else if (t === 5) {
+                // Green EXIT / MAIN GATE
+                ctx.fillStyle = "#22c55e";
+                ctx.fillRect(x + 2, y + 2, TILE - 4, TILE - 4);
+                ctx.strokeStyle = "#15803d";
+                ctx.lineWidth = 2.5;
+                ctx.strokeRect(x + 2, y + 2, TILE - 4, TILE - 4);
+                ctx.fillStyle = "#052e16";
+                ctx.font = "bold 10px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(lvl === 4 ? "GATE" : "EXIT", x + TILE / 2, y + TILE / 2 + 3);
+            }
+        }
+    }
+
+    // Header Banner Text on Top Wall
+    ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+    ctx.font = "bold 11px monospace";
+    ctx.textAlign = "center";
+    const bannerTitle = lvl === 1
+        ? `${playerState.course}: ${playerState.subject}`
+        : (lvl === 2 ? `LAB: ${playerState.selectedLab}` : (lvl === 3 ? "ACADEMIC BLOCK CORRIDOR" : "MMMUT CAMPUS MAIN GATE"));
+    ctx.fillText(bannerTitle.toUpperCase(), 4.5 * TILE, 24);
+    ctx.fillText("BY ARYAN YADAV", 14.5 * TILE, 24);
+
+    // Draw Energy Cans
+    for (const can of energyCans) {
+        if (!can.active) continue;
+        ctx.save();
+        ctx.translate(can.x, can.y + Math.sin(performance.now() * 0.006) * 3);
+        ctx.fillStyle = "#0ea5e9";
+        ctx.fillRect(-5, -8, 10, 16);
+        ctx.fillStyle = "#f8fafc";
+        ctx.fillRect(-5, -8, 10, 3);
+        ctx.fillStyle = "#fde047";
+        ctx.font = "bold 10px sans-serif";
+        ctx.fillText("⚡", 0, 4);
+        ctx.restore();
+    }
+}
+
+function drawRunningCharacter(entity, role) {
+    ctx.save();
+    ctx.translate(entity.x, entity.y);
+
+    if (role === "student" && entity.invulnTimer > 0 && Math.floor(performance.now() / 80) % 2 === 0) {
+        ctx.globalAlpha = 0.45;
+    }
+
+    const swing = Math.sin(entity.animTime || 0) * 6;
+    const bounce = Math.abs(Math.cos(entity.animTime || 0)) * 2.5;
+
+    // Shadow
+    ctx.fillStyle = "rgba(15, 23, 42, 0.25)";
+    ctx.beginPath();
+    ctx.ellipse(0, 13, 10, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Animated Feet
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.arc(-5, 9 + swing * 0.6, 4, 0, Math.PI * 2);
+    ctx.arc(5, 9 - swing * 0.6, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.translate(0, -bounce);
+
+    if (role === "student") {
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(-9, -4, 18, 12);
+
+        ctx.fillStyle = playerState.outfitColor;
+        ctx.beginPath();
+        ctx.arc(0, 2, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (playerState.gender === "female") {
+            ctx.fillStyle = "#3f1d0b";
+            ctx.beginPath();
+            ctx.ellipse(-entity.dirX * 7 + swing * 0.3, -7, 5, 3.5, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.fillStyle = "#fed7aa";
+        ctx.beginPath();
+        ctx.arc(0, -6, 8.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = playerState.gender === "male" ? "#ef4444" : "#3f1d0b";
+        ctx.beginPath();
+        ctx.arc(0, -8, 8.5, Math.PI, 0);
+        ctx.fill();
+    } 
+    else if (role === "professor" || role === "lab_instructor") {
+        ctx.fillStyle = role === "lab_instructor" ? "#f8fafc" : "#581c87";
+        ctx.beginPath();
+        ctx.arc(0, 2, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ef4444";
+        ctx.fillRect(-2, -1, 4, 10);
+        ctx.fillStyle = "#fde68a";
+        ctx.beginPath();
+        ctx.arc(0, -6, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 1.8;
+        ctx.strokeRect(-7, -8, 6, 4);
+        ctx.strokeRect(1, -8, 6, 4);
+    } 
+    else if (role === "lab_assistant") {
+        // White Lab Coat Assistant with Goggles
+        ctx.fillStyle = "#e2e8f0";
+        ctx.beginPath();
+        ctx.arc(0, 2, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#22c55e";
+        ctx.fillRect(8, -4, 4, 9);
+        ctx.fillStyle = "#fed7aa";
+        ctx.beginPath();
+        ctx.arc(0, -6, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillRect(-6, -8, 12, 4);
+    } 
+    else if (role === "friend") {
+        // Clingy Corridor Friend
+        ctx.fillStyle = entity.shirt || "#ec4899";
+        ctx.beginPath();
+        ctx.arc(0, 2, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#fed7aa";
+        ctx.beginPath();
+        ctx.arc(0, -6, 8.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1e293b";
+        ctx.beginPath();
+        ctx.arc(0, -8, 8.5, Math.PI, 0);
+        ctx.fill();
+    } 
+    else if (role === "guard") {
+        // Navy Blue Campus Security Guard with Cap & Baton
+        ctx.fillStyle = "#1e3a8a";
+        ctx.beginPath();
+        ctx.arc(0, 2, 11.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#fbbf24";
+        ctx.fillRect(3, -1, 4, 4); // Gold Guard Badge
+        ctx.fillStyle = "#fed7aa";
+        ctx.beginPath();
+        ctx.arc(0, -6, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#172554";
+        ctx.beginPath();
+        ctx.arc(0, -8, 9.5, Math.PI, 0);
+        ctx.fill();
+        ctx.fillRect(-8, -9, 16, 3);
+    } 
+    else if (role === "nerd") {
+        ctx.fillStyle = "#eab308";
+        ctx.beginPath();
+        ctx.arc(0, 2, 9.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#fed7aa";
+        ctx.beginPath();
+        ctx.arc(0, -6, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(-3.5, -6, 3.2, 0, Math.PI * 2);
+        ctx.arc(3.5, -6, 3.2, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+function renderGameplayScene() {
+    if (!student) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawStageEnvironment();
+
+    const drawOrder = [
+        { entity: student, role: "student" },
+        ...chasers.map(c => ({ entity: c, role: c.role })),
+        ...patrollers.map(p => ({ entity: p, role: p.role }))
+    ].sort((a, b) => a.entity.y - b.entity.y);
+
+    drawOrder.forEach(item => drawRunningCharacter(item.entity, item.role));
+
+    // Draw Projectiles
+    for (const p of projectiles) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.type === "tube" ? "#4ade80" : (p.type === "whistle" ? "#fbbf24" : "#ffffff");
+        ctx.fillRect(-6, -3, 12, 6);
+        ctx.restore();
+    }
+
+    // Draw Floating Popups
+    ctx.font = "bold 12px 'Plus Jakarta Sans', sans-serif";
+    ctx.textAlign = "center";
+    for (const ft of floatingTexts) {
+        const w = ctx.measureText(ft.text).width + 14;
+        ctx.fillStyle = ft.bg || "#fef08a";
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(ft.x - w / 2, ft.y - 14, w, 20, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#0f172a";
+        ctx.fillText(ft.text, ft.x, ft.y);
+    }
+}
+
+/* ============================================================================
+   8. STAGE COMPLETION, PROGRESSIVE UNLOCKING & LEVEL 4 HOME FINALE
+   ============================================================================ */
+function concludeStage(didWin) {
+    gameRunning = false;
+    const lvl = playerState.activeLevel;
+
+    // Save Best Time & Unlock Next Stage on Win
+    if (didWin) {
+        const prevBest = parseFloat(localStorage.getItem(`aryan_ditch_best_lvl_${lvl}`) || "9999");
+        const curTime = parseFloat(currentRunSeconds);
+        if (curTime < prevBest) {
+            localStorage.setItem(`aryan_ditch_best_lvl_${lvl}`, currentRunSeconds);
+        }
+
+        if (lvl >= playerState.unlockedLevel && lvl < 4) {
+            playerState.unlockedLevel = lvl + 1;
+            localStorage.setItem("aryan_ditch_unlocked", String(playerState.unlockedLevel));
+        }
+
+        // If Player Just Beat Level 4 (Ditch The Campus), Play Finale Home Cutscene Movie!
+        if (lvl === 4) {
+            startAnimatedCutscene("finale");
+            return;
+        }
+    }
+
+    const emojiEl = document.getElementById("result-emoji");
+    const tagEl = document.getElementById("result-stage-tag");
+    const headingEl = document.getElementById("result-heading");
+    const subEl = document.getElementById("result-subtitle");
+    const nextBtn = document.getElementById("res-next-btn");
+    const nextLabel = document.getElementById("res-next-label");
+
+    if (didWin) {
+        playSfx("win");
+        emojiEl.textContent = "🎉";
+        tagEl.textContent = `STAGE ${lvl} CLEARED!`;
+        headingEl.textContent = `${LEVEL_META[lvl - 1].name.toUpperCase()} DONE!`;
+        subEl.innerHTML = `Awesome run! You unlocked <b>Stage ${lvl + 1}: ${LEVEL_META[lvl].name}</b>!`;
+        nextBtn.classList.remove("hidden");
+        nextLabel.textContent = `Play Stage ${lvl + 1}`;
+    } else {
+        playSfx("caught");
+        emojiEl.textContent = "📏";
+        tagEl.textContent = `STAGE ${lvl} FAILED`;
+        headingEl.textContent = "BUSTED! BACK TO CLASS!";
+        subEl.innerHTML = `You ran out of all 5 hearts on <b>${LEVEL_META[lvl - 1].name}</b>! Try using Sprint Dash & Energy cans!`;
+        nextBtn.classList.add("hidden");
+    }
+
+    document.getElementById("res-stat-time").textContent = `${currentRunSeconds}s`;
+    document.getElementById("res-stat-best").textContent = getStageBestTime(lvl);
+    document.getElementById("res-stat-hearts").textContent = `${student.hearts.toFixed(1)} ❤️`;
+
+    navigateToPage(6);
+}
+
+document.getElementById("game-quit-btn").addEventListener("click", () => {
+    gameRunning = false;
+    navigateToPage(3);
+});
+
+document.getElementById("res-next-btn").addEventListener("click", () => {
+    const nextLvl = Math.min(4, playerState.activeLevel + 1);
+    handleStageLaunchRequest(nextLvl);
+});
+
+document.getElementById("res-replay-btn").addEventListener("click", () => {
+    launchGameplayStage(playerState.activeLevel);
+});
+
+document.getElementById("res-quit-btn").addEventListener("click", () => {
+    navigateToPage(3);
+});
+
+// Master Animation Loop
+let prevTick = performance.now();
+function masterLoop(now) {
+    const dt = Math.min((now - prevTick) / 1000, 0.1);
+    prevTick = now;
+
+    if (cutsceneActive) {
+        updateAndDrawCutscene(dt);
+    } else if (gameRunning) {
+        updateGameEngine(dt);
+        renderGameplayScene();
+    }
+    requestAnimationFrame(masterLoop);
+}
+requestAnimationFrame(masterLoop);
+</script>
+</body>
+</html>
